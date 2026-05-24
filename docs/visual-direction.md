@@ -12,6 +12,18 @@ The visual system should feel like polished obsidian: dark, precise, reflective,
 - Motion: deliberate, slow enough to feel intentional, never flashy.
 - Sound: subtle glass/cup resonance, only after user interaction.
 
+## Current Design Language
+
+Name: Obsidian Technical Luxury.
+
+The design should read as premium because it is precise, not because it is decorated. Use restraint:
+
+- Use black glass surfaces, fine mineral borders, and controlled reflection.
+- Use copper/gold only as a micro-accent: numeration, corner marks, active states, and thin rules.
+- Use ice-blue for technical signal: glyphs, focus lines, status, and spatial depth.
+- Prefer custom geometric glyphs over generic icon packs when the symbol is part of the cube language.
+- Avoid filling empty space with decoration unless it reinforces navigation, structure, or hierarchy.
+
 ## Cube Rules
 
 - The cube is the portal.
@@ -44,6 +56,21 @@ Pages entered from the cube should be:
 - Spacious but not empty.
 - Built for recruiters and AI parsers.
 - Semantic HTML first, visual enhancement second.
+
+Surface rules:
+
+- Cards should feel like polished obsidian panels: dark, reflective, thin bordered, and responsive to the pointer.
+- Cards may use tiny corner marks, inner highlights, and cursor-following light.
+- Do not nest cards inside cards.
+- Do not use large rounded SaaS-style cards.
+- Repeated cards should share a common interaction model and visual grammar.
+
+Transition rules:
+
+- Clicking a face should feel like entering that face, not like opening a separate route.
+- Use a brief aperture/scan-light transition from cube to page.
+- Once the page is visible, the cube must be gone.
+- The page may preserve the selected face's glyph and accent color as continuity.
 
 ## Color Tokens
 
@@ -83,6 +110,8 @@ Working palette:
 - Hero sections that look like a SaaS template.
 - Bloom-driven glow.
 - Stock-like imagery that does not reveal useful meaning.
+- Gold ornament used as luxury decoration without structural purpose.
+- Icon styles that do not match the cube glyph geometry.
 
 ## Tailwind Policy
 

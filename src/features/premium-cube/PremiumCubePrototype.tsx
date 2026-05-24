@@ -7,7 +7,7 @@ import { useSiteContent } from './content/useSiteContent'
 import { readDiagnosticFx } from './diagnosticFx'
 import { CubeScene } from './scene/CubeScene'
 
-function SectionGlyph({ sectionId }: { sectionId: CubeSectionId }) {
+function SectionGlyph({ className = 'section-panel__glyph', sectionId }: { className?: string; sectionId: CubeSectionId }) {
   const accentBySection: Record<CubeSectionId, string> = {
     agentic: '#9acbf2',
     products: '#c28a5a',
@@ -19,7 +19,7 @@ function SectionGlyph({ sectionId }: { sectionId: CubeSectionId }) {
   const accent = accentBySection[sectionId]
 
   return (
-    <svg aria-hidden="true" className="section-panel__glyph" viewBox="0 0 160 160">
+    <svg aria-hidden="true" className={className} viewBox="0 0 160 160">
       <defs>
         <radialGradient cx="50%" cy="50%" id={`glyph-glow-${sectionId}`} r="62%">
           <stop offset="0%" stopColor={accent} stopOpacity="0.55" />
@@ -402,6 +402,7 @@ export function PremiumCubePrototype() {
       <section className="section-panel" aria-hidden={!activeSection} ref={sectionPanelRef}>
         {activeSection && (
           <div className="section-panel__inner">
+            <span className="section-panel__aperture" aria-hidden="true" />
             <nav className="section-panel__face-nav" aria-label={sectionCopy.faces}>
               <span>{sectionCopy.faces}</span>
               <div>
@@ -413,6 +414,7 @@ export function PremiumCubePrototype() {
                     type="button"
                     onClick={() => setActiveSectionId(section.id)}
                   >
+                    <SectionGlyph className="face-nav__glyph" sectionId={section.id} />
                     <strong>{String(index + 1).padStart(2, '0')}</strong>
                     {section.label}
                   </button>

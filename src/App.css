@@ -1,4 +1,13 @@
 .prototype-shell {
+  --obsidian-page: #03050b;
+  --obsidian-surface: rgba(5, 8, 15, 0.72);
+  --obsidian-surface-strong: rgba(5, 9, 17, 0.9);
+  --obsidian-line: rgba(154, 203, 242, 0.14);
+  --obsidian-line-strong: rgba(238, 247, 255, 0.22);
+  --obsidian-copper: rgba(194, 138, 90, 0.86);
+  --obsidian-ice: rgba(154, 203, 242, 0.88);
+  --obsidian-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
   position: relative;
   display: block;
   width: 100vw;
@@ -9,6 +18,7 @@
   overflow: hidden;
   color: var(--ink);
   background:
+    linear-gradient(118deg, transparent 0 49.84%, rgba(154, 203, 242, 0.04) 49.9% 50%, transparent 50.08%),
     radial-gradient(circle at 50% 46%, rgba(120, 170, 210, 0.12), transparent 28%),
     radial-gradient(circle at 28% 18%, rgba(186, 125, 88, 0.1), transparent 24%),
     radial-gradient(circle at 72% 76%, rgba(112, 88, 154, 0.12), transparent 24%),
@@ -38,6 +48,7 @@
     linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
   background-size: 72px 72px;
   mask-image: radial-gradient(circle at 50% 48%, black 0 38%, transparent 72%);
+  opacity: 0.82;
   transition: opacity 520ms ease;
 }
 
@@ -48,6 +59,7 @@
   pointer-events: none;
   content: '';
   background:
+    radial-gradient(circle at 50% 56%, rgba(154, 203, 242, 0.08), transparent 22%),
     radial-gradient(ellipse at center, transparent 0 36%, rgba(0, 0, 0, 0.52) 82%),
     linear-gradient(180deg, rgba(0, 0, 0, 0.28), transparent 24%, rgba(0, 0, 0, 0.42));
   transition: opacity 520ms ease;
@@ -125,6 +137,14 @@
   background: rgba(154, 203, 242, 0.14);
 }
 
+.language-toggle button:focus-visible,
+.section-panel button:focus-visible,
+.section-panel a:focus-visible {
+  outline: 1px solid rgba(240, 210, 180, 0.78);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgba(194, 138, 90, 0.12);
+}
+
 .section-panel {
   position: absolute;
   inset: 0;
@@ -137,15 +157,23 @@
   padding: clamp(1.25rem, 4vw, 4.5rem);
   pointer-events: none;
   background:
+    radial-gradient(circle at 18% 2%, rgba(194, 138, 90, 0.12), transparent 28rem),
+    radial-gradient(circle at 88% 12%, rgba(154, 203, 242, 0.1), transparent 32rem),
     linear-gradient(118deg, rgba(154, 203, 242, 0.1) 0 1px, transparent 1px 52%),
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px),
     linear-gradient(180deg, #05070d 0%, #080a10 48%, #030407 100%);
   background-size:
     100% 100%,
+    100% 100%,
+    100% 100%,
+    5.5rem 5.5rem,
+    5.5rem 5.5rem,
     100% 100%;
   opacity: 0;
   transition:
     opacity 520ms ease 180ms,
-    transform 760ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    transform 760ms var(--obsidian-ease);
   transform: translate3d(0, 1.8rem, 0);
 }
 
@@ -163,6 +191,37 @@
   padding-bottom: clamp(3rem, 7vh, 6rem);
   color: rgba(240, 246, 252, 0.92);
   text-align: left;
+}
+
+.section-panel__aperture {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 38%, rgba(238, 247, 255, 0.12), transparent 0 16%, rgba(2, 3, 7, 0.64) 58%, rgba(2, 3, 7, 0.9)),
+    linear-gradient(90deg, transparent, rgba(154, 203, 242, 0.08) 50%, transparent);
+  opacity: 0;
+  transform: scaleX(0.18) scaleY(0.03);
+  transform-origin: 50% 38%;
+  animation: page-aperture 820ms var(--obsidian-ease) 80ms forwards;
+}
+
+@keyframes page-aperture {
+  0% {
+    opacity: 0.72;
+    transform: scaleX(0.18) scaleY(0.03);
+  }
+
+  48% {
+    opacity: 0.48;
+    transform: scaleX(0.94) scaleY(0.18);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scaleX(1.16) scaleY(1);
+  }
 }
 
 .section-panel__inner::before {
@@ -221,7 +280,7 @@
   align-items: center;
   min-height: 2.15rem;
   padding: 0.45rem 0.58rem;
-  border: 1px solid rgba(154, 203, 242, 0.12);
+  border: 1px solid var(--obsidian-line);
   border-radius: 6px;
   color: rgba(202, 214, 226, 0.62);
   background: rgba(3, 7, 12, 0.36);
@@ -229,6 +288,24 @@
   font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.12em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  transition:
+    border-color 180ms ease,
+    color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.section-panel__face-nav button:hover {
+  transform: translateY(-1px);
+}
+
+.face-nav__glyph {
+  width: 1.08rem;
+  height: 1.08rem;
+  flex: 0 0 auto;
+  opacity: 0.62;
+  filter: drop-shadow(0 0 10px rgba(154, 203, 242, 0.12));
 }
 
 .section-panel__face-nav button strong {
@@ -242,6 +319,10 @@
   border-color: rgba(194, 138, 90, 0.36);
   color: rgba(247, 250, 253, 0.94);
   background: rgba(154, 203, 242, 0.1);
+}
+
+.section-panel__face-nav button.is-active .face-nav__glyph {
+  opacity: 1;
 }
 
 .section-panel__face-nav button.is-active strong {
@@ -433,6 +514,12 @@
   --tilt-x: 0deg;
   --tilt-y: 0deg;
 
+  position: relative;
+  border-radius: 8px;
+  isolation: isolate;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
   transform:
     perspective(900px)
     rotateX(var(--tilt-x))
@@ -478,6 +565,29 @@
   opacity: 0;
   mix-blend-mode: screen;
   transition: opacity 220ms ease;
+}
+
+.obsidian-card__shine::before,
+.obsidian-card__shine::after {
+  position: absolute;
+  width: 2.2rem;
+  height: 2.2rem;
+  content: '';
+  opacity: 0.82;
+}
+
+.obsidian-card__shine::before {
+  top: 0.7rem;
+  left: 0.7rem;
+  border-top: 1px solid rgba(194, 138, 90, 0.48);
+  border-left: 1px solid rgba(194, 138, 90, 0.42);
+}
+
+.obsidian-card__shine::after {
+  right: 0.7rem;
+  bottom: 0.7rem;
+  border-right: 1px solid rgba(154, 203, 242, 0.34);
+  border-bottom: 1px solid rgba(154, 203, 242, 0.32);
 }
 
 .obsidian-card:hover > .obsidian-card__shine {
@@ -991,6 +1101,19 @@
 .section-panel button:hover {
   border-color: rgba(194, 138, 90, 0.46);
   background: rgba(12, 18, 28, 0.72);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-panel__aperture {
+    animation: none;
+  }
+
+  .obsidian-card,
+  .cube-canvas,
+  .prototype-chrome,
+  .section-panel {
+    transition-duration: 1ms;
+  }
 }
 
 .prototype-kicker,
