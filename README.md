@@ -21,10 +21,10 @@ This project is not a public CV. It is a visible product artifact for a transiti
 - Three.js / React Three Fiber
 - Drei
 - Web Audio API
+- Tailwind CSS
 
 Planned:
 
-- Tailwind CSS with strict project tokens.
 - Structured bilingual content loader.
 - Spec-driven development workflow.
 - Future admin content panel.

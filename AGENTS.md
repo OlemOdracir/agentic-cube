@@ -9,6 +9,7 @@ Before making product, content, UI, or architecture changes, read:
 - `docs/agent-rules.md`
 - `docs/content-strategy.md`
 - `docs/production-roadmap.md`
+- `docs/tailwind-foundation.md`
 
 ## Product Positioning
 
