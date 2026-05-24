@@ -1,73 +1,84 @@
-# React + TypeScript + Vite
+# Agentic Cube Prototype
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Open-source agentic portfolio prototype for Ricardo Melo.
 
-Currently, two official plugins are available:
+This project is not a public CV. It is a visible product artifact for a transition into Agentic Product Engineering: building AI-assisted products with real production systems experience, security awareness, open-source practice, and independent research depth.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Current Concept
 
-## React Compiler
+- Premium Three.js cube as an entry portal.
+- Polished obsidian visual direction.
+- Procedural glass/cup resonance audio.
+- Face-to-page transition.
+- Static readable pages after entering a cube face.
+- Public example content with private deploy content kept out of Git.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Stack
 
-## Expanding the ESLint configuration
+- React
+- TypeScript
+- Vite
+- Three.js / React Three Fiber
+- Drei
+- Web Audio API
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Planned:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Tailwind CSS with strict project tokens.
+- Structured bilingual content loader.
+- Spec-driven development workflow.
+- Future admin content panel.
+- Future AWS production deployment.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Getting Started
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Run checks:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build
+npm run lint
 ```
+
+## Development Orientation
+
+Before making product, design, content, or architecture changes, read:
+
+- `AGENTS.md`
+- `docs/site-brief.md`
+- `docs/visual-direction.md`
+- `docs/agent-rules.md`
+- `docs/content-strategy.md`
+- `docs/production-roadmap.md`
+
+## Content Strategy
+
+The repository includes example content:
+
+- `public/content/site.example.en.json`
+- `public/content/site.example.es.json`
+
+Personal deployment content should use:
+
+- `public/content/site.en.json`
+- `public/content/site.es.json`
+
+Those private files are ignored by Git.
+
+## Visual Direction
+
+The project follows the Obsidian Interface System:
+
+- Dark, premium, sober, technical.
+- The cube is a portal, not permanent decoration.
+- After entering a face, the site becomes normal static content.
+- No production `Bloom`; it caused visible flicker.
+- Audio is subtle and only starts after user interaction.
+
+## License
+
+MIT

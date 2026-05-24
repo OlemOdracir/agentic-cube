@@ -1,0 +1,55 @@
+{
+  "locale": "en",
+  "identity": {
+    "displayName": "Ricardo Melo",
+    "fullName": "Ricardo Hernan Melo Gallardo",
+    "handle": "OlemOdracir",
+    "role": "Agentic Product Engineer"
+  },
+  "seo": {
+    "title": "Ricardo Melo | Agentic Product Engineer",
+    "description": "Open-source agentic portfolio prototype for AI-assisted product development, production systems, security, and research."
+  },
+  "hero": {
+    "headline": "Agentic Product Engineer building AI-assisted products from real-world systems experience.",
+    "summary": "A public prototype for product building with agents, production engineering discipline, open-source tools, and independent research."
+  },
+  "sections": [
+    {
+      "id": "agentic",
+      "label": "AGENTIC",
+      "title": "Agentic Product Engineering",
+      "summary": "Building products with AI agents, specs, fast prototypes, and production-minded iteration."
+    },
+    {
+      "id": "products",
+      "label": "PRODUCTS",
+      "title": "Public Products",
+      "summary": "Open-source tools and product experiments that demonstrate execution, safety, and usability."
+    },
+    {
+      "id": "systems",
+      "label": "SYSTEMS",
+      "title": "Production Systems",
+      "summary": "Experience with legacy modernization, databases, architecture, and real operational constraints."
+    },
+    {
+      "id": "security",
+      "label": "SECURITY",
+      "title": "Security Mindset",
+      "summary": "Secure defaults, MFA, rate limiting, validation, and production risk awareness."
+    },
+    {
+      "id": "research",
+      "label": "RESEARCH",
+      "title": "Independent Research",
+      "summary": "Work on AI, thought, truth, representation, papers, and long-form writing."
+    },
+    {
+      "id": "contact",
+      "label": "CONTACT",
+      "title": "Contact",
+      "summary": "Professional links and contact channels for collaboration and opportunities."
+    }
+  ]
+}

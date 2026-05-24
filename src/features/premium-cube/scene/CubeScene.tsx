@@ -33,12 +33,12 @@ type PointerEventLike = {
 }
 
 const FACE_TARGET_ROTATION: Record<CubeSectionId, [number, number, number]> = {
-  work: [0, 0, 0],
-  systems: [0, -Math.PI / 2, 0],
-  design: [Math.PI / 2, 0, 0],
-  contact: [0, Math.PI, 0],
-  about: [0, Math.PI / 2, 0],
-  lab: [-Math.PI / 2, 0, 0],
+  agentic: [0, 0, 0],
+  products: [0, -Math.PI / 2, 0],
+  systems: [Math.PI / 2, 0, 0],
+  security: [0, Math.PI, 0],
+  research: [0, Math.PI / 2, 0],
+  contact: [-Math.PI / 2, 0, 0],
 }
 
 function easeInOutCubic(value: number) {
@@ -51,7 +51,7 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
   const transitionRef = useRef({
     active: false,
     complete: false,
-    sectionId: 'work' as CubeSectionId,
+    sectionId: 'agentic' as CubeSectionId,
     startedAt: 0,
     duration: 1.28,
     startRotation: [0, 0, 0] as [number, number, number],
@@ -70,7 +70,7 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
     totalDistance: 0,
     soundDistance: 0,
     lastResonanceAt: 0,
-    clickSectionId: 'work' as CubeSectionId,
+    clickSectionId: 'agentic' as CubeSectionId,
   })
   const { camera, size } = useThree()
   const isNarrow = size.width < 720
@@ -92,14 +92,14 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
     const absZ = Math.abs(localPoint.z)
 
     if (absX > absY && absX > absZ) {
-      return localPoint.x > 0 ? 'systems' : 'about'
+      return localPoint.x > 0 ? 'products' : 'research'
     }
 
     if (absY > absX && absY > absZ) {
-      return localPoint.y > 0 ? 'design' : 'lab'
+      return localPoint.y > 0 ? 'systems' : 'contact'
     }
 
-    return localPoint.z > 0 ? 'work' : 'contact'
+    return localPoint.z > 0 ? 'agentic' : 'security'
   }, [])
 
   const closestAngle = useCallback((from: number, to: number) => {

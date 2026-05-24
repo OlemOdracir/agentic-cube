@@ -1,0 +1,55 @@
+{
+  "locale": "es",
+  "identity": {
+    "displayName": "Ricardo Melo",
+    "fullName": "Ricardo Hernan Melo Gallardo",
+    "handle": "OlemOdracir",
+    "role": "Ingeniero de Productos Agenticos"
+  },
+  "seo": {
+    "title": "Ricardo Melo | Ingeniero de Productos Agenticos",
+    "description": "Prototipo open source de portfolio agentico para desarrollo asistido por IA, sistemas productivos, seguridad e investigacion."
+  },
+  "hero": {
+    "headline": "Ingeniero de productos agenticos construyendo software asistido por IA desde experiencia real en sistemas productivos.",
+    "summary": "Un prototipo publico para construir productos con agentes, criterio de produccion, herramientas open source e investigacion independiente."
+  },
+  "sections": [
+    {
+      "id": "agentic",
+      "label": "AGENTIC",
+      "title": "Ingenieria de Productos Agenticos",
+      "summary": "Construccion de productos con agentes de IA, especificaciones, prototipos rapidos e iteracion con criterio productivo."
+    },
+    {
+      "id": "products",
+      "label": "PRODUCTS",
+      "title": "Productos Publicos",
+      "summary": "Herramientas open source y experimentos de producto que demuestran ejecucion, seguridad y usabilidad."
+    },
+    {
+      "id": "systems",
+      "label": "SYSTEMS",
+      "title": "Sistemas Productivos",
+      "summary": "Experiencia en modernizacion legacy, bases de datos, arquitectura y restricciones operativas reales."
+    },
+    {
+      "id": "security",
+      "label": "SECURITY",
+      "title": "Criterio de Seguridad",
+      "summary": "Defaults seguros, MFA, rate limiting, validacion y conciencia de riesgo productivo."
+    },
+    {
+      "id": "research",
+      "label": "RESEARCH",
+      "title": "Investigacion Independiente",
+      "summary": "Trabajo sobre IA, pensamiento, verdad, representacion, papers y escritura de largo aliento."
+    },
+    {
+      "id": "contact",
+      "label": "CONTACT",
+      "title": "Contacto",
+      "summary": "Links profesionales y canales de contacto para colaboracion y oportunidades."
+    }
+  ]
+}
