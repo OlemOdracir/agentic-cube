@@ -346,7 +346,7 @@ export function PremiumCubePrototype() {
       >
         <Canvas
           camera={{ position: [0, 1.05, 6.8], fov: 42, near: 0.1, far: 80 }}
-          dpr={[1, 1.5]}
+          dpr={[1.5, 2]}
           gl={{
             antialias: true,
             alpha: false,

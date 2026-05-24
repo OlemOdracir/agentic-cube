@@ -1,7 +1,7 @@
 import { RoundedBox } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useMemo } from 'react'
-import { AdditiveBlending, CanvasTexture, Color, SRGBColorSpace } from 'three'
+import { AdditiveBlending, CanvasTexture, Color, LinearFilter, LinearMipmapLinearFilter, SRGBColorSpace } from 'three'
 import type { Mesh, MeshBasicMaterial } from 'three'
 import type { CubeSection } from '../cubeSections'
 import type { CubeSectionId } from '../cubeSections'
@@ -22,8 +22,10 @@ function drawFaceGlyph(ctx: CanvasRenderingContext2D, sectionId: CubeSectionId, 
   ctx.translate(x, y)
   ctx.strokeStyle = accent
   ctx.fillStyle = accent
-  ctx.lineWidth = 5
-  ctx.shadowBlur = 22
+  ctx.lineWidth = 7
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.shadowBlur = 28
   ctx.shadowColor = accent
 
   ctx.save()
@@ -114,7 +116,7 @@ function drawFaceGlyph(ctx: CanvasRenderingContext2D, sectionId: CubeSectionId, 
 }
 
 function createFaceTexture(section: CubeSection, index: number) {
-  const size = 768
+  const size = 1536
   const canvas = document.createElement('canvas')
   canvas.width = size
   canvas.height = size
@@ -133,35 +135,38 @@ function createFaceTexture(section: CubeSection, index: number) {
   ctx.fillStyle = glow
   ctx.fillRect(0, 0, size, size)
 
-  ctx.strokeStyle = 'rgba(210, 228, 242, 0.44)'
-  ctx.lineWidth = 2
+  ctx.strokeStyle = 'rgba(210, 228, 242, 0.32)'
+  ctx.lineWidth = 4
   ctx.strokeRect(54, 54, size - 108, size - 108)
-  ctx.strokeStyle = 'rgba(193, 139, 90, 0.5)'
+  ctx.strokeStyle = 'rgba(193, 139, 90, 0.36)'
   ctx.strokeRect(78, 78, size - 156, size - 156)
 
   drawFaceGlyph(ctx, section.id, size * 0.5, size * 0.42)
 
   ctx.strokeStyle = 'rgba(154, 203, 242, 0.28)'
-  ctx.lineWidth = 1.5
+  ctx.lineWidth = 3
   ctx.beginPath()
   ctx.moveTo(size * 0.24, size * 0.58)
   ctx.lineTo(size * 0.76, size * 0.58)
   ctx.stroke()
 
   ctx.fillStyle = 'rgba(238, 244, 250, 0.94)'
-  ctx.font = '600 34px Inter, Arial, sans-serif'
+  ctx.font = '600 68px Inter, Arial, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.letterSpacing = '10px'
+  ctx.letterSpacing = '20px'
   ctx.fillText(section.label, size * 0.5, size * 0.68)
 
   ctx.fillStyle = 'rgba(154, 203, 242, 0.76)'
-  ctx.font = '500 13px Inter, Arial, sans-serif'
+  ctx.font = '500 26px Inter, Arial, sans-serif'
   ctx.fillText(`FACE 0${index + 1}`, size * 0.5, size * 0.77)
 
   const texture = new CanvasTexture(canvas)
   texture.colorSpace = SRGBColorSpace
-  texture.anisotropy = 8
+  texture.anisotropy = 16
+  texture.generateMipmaps = true
+  texture.minFilter = LinearMipmapLinearFilter
+  texture.magFilter = LinearFilter
   return texture
 }
 
@@ -276,12 +281,12 @@ type PremiumCubeProps = {
 export function PremiumCube({ animateGlints, sections, shadows }: PremiumCubeProps) {
   const faceTextures = useMemo(() => sections.map(createFaceTexture), [sections])
   const facePanels = [
-    { position: [0, 0, 1.112] as const, rotation: [0, 0, 0] as const, texture: faceTextures[0] },
-    { position: [1.112, 0, 0] as const, rotation: [0, Math.PI / 2, 0] as const, texture: faceTextures[1] },
-    { position: [0, 1.112, 0] as const, rotation: [-Math.PI / 2, 0, 0] as const, texture: faceTextures[2] },
-    { position: [0, 0, -1.112] as const, rotation: [0, Math.PI, 0] as const, texture: faceTextures[3] },
-    { position: [-1.112, 0, 0] as const, rotation: [0, -Math.PI / 2, 0] as const, texture: faceTextures[4] },
-    { position: [0, -1.112, 0] as const, rotation: [Math.PI / 2, 0, 0] as const, texture: faceTextures[5] },
+    { position: [0, 0, 1.118] as const, rotation: [0, 0, 0] as const, texture: faceTextures[0] },
+    { position: [1.118, 0, 0] as const, rotation: [0, Math.PI / 2, 0] as const, texture: faceTextures[1] },
+    { position: [0, 1.118, 0] as const, rotation: [-Math.PI / 2, 0, 0] as const, texture: faceTextures[2] },
+    { position: [0, 0, -1.118] as const, rotation: [0, Math.PI, 0] as const, texture: faceTextures[3] },
+    { position: [-1.118, 0, 0] as const, rotation: [0, -Math.PI / 2, 0] as const, texture: faceTextures[4] },
+    { position: [0, -1.118, 0] as const, rotation: [Math.PI / 2, 0, 0] as const, texture: faceTextures[5] },
   ]
 
   return (
@@ -289,13 +294,13 @@ export function PremiumCube({ animateGlints, sections, shadows }: PremiumCubePro
       <RoundedBox args={[2.18, 2.18, 2.18]} radius={0.105} smoothness={9} castShadow={shadows} receiveShadow={shadows}>
         <meshPhysicalMaterial
           color={new Color('#0c111a')}
-          metalness={0.92}
-          roughness={0.055}
+          metalness={0.86}
+          roughness={0.105}
           clearcoat={1}
-          clearcoatRoughness={0.032}
+          clearcoatRoughness={0.075}
           emissive={new Color('#06101b')}
-          emissiveIntensity={0.32}
-          reflectivity={0.96}
+          emissiveIntensity={0.26}
+          reflectivity={0.82}
           transmission={0.06}
           thickness={0.22}
           ior={1.54}
@@ -308,7 +313,7 @@ export function PremiumCube({ animateGlints, sections, shadows }: PremiumCubePro
           <meshBasicMaterial
             map={panel.texture}
             transparent
-            opacity={0.94}
+            opacity={0.88}
             depthWrite={false}
             toneMapped={false}
           />

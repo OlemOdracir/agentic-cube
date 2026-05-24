@@ -1,5 +1,12 @@
 import { useMemo } from 'react'
-import { CanvasTexture, EquirectangularReflectionMapping, SRGBColorSpace, TextureLoader } from 'three'
+import {
+  CanvasTexture,
+  EquirectangularReflectionMapping,
+  LinearFilter,
+  LinearMipmapLinearFilter,
+  SRGBColorSpace,
+  TextureLoader,
+} from 'three'
 
 const ENVIRONMENT_URL = '/environments/udec-frontis.jpg'
 
@@ -55,10 +62,10 @@ function createWildEnvironmentTexture() {
   ctx.fillStyle = glow
   ctx.fillRect(0, 0, width, height)
 
-  ctx.fillStyle = 'rgba(255, 248, 220, 0.2)'
-  ctx.fillRect(0, height * 0.39, width, 5)
-  ctx.fillStyle = 'rgba(210, 232, 230, 0.1)'
-  ctx.fillRect(0, height * 0.45, width, 3)
+  ctx.fillStyle = 'rgba(255, 248, 220, 0.11)'
+  ctx.fillRect(0, height * 0.39, width, 8)
+  ctx.fillStyle = 'rgba(210, 232, 230, 0.06)'
+  ctx.fillRect(0, height * 0.45, width, 6)
 
   drawMountainRange(ctx, [42, 68, 54, 96, 62, 118, 58, 86, 44, 74, 56, 104, 48], height * 0.53, '#344140', width)
   drawMountainRange(ctx, [76, 104, 82, 138, 94, 164, 98, 124, 72, 110, 88, 144, 74], height * 0.59, '#111818', width)
@@ -91,15 +98,34 @@ function createWildEnvironmentTexture() {
 
   const lightColumn = ctx.createLinearGradient(width * 0.32, 0, width * 0.54, 0)
   lightColumn.addColorStop(0, 'rgba(255, 239, 196, 0)')
-  lightColumn.addColorStop(0.44, 'rgba(255, 239, 196, 0.28)')
+  lightColumn.addColorStop(0.44, 'rgba(255, 239, 196, 0.16)')
   lightColumn.addColorStop(1, 'rgba(255, 239, 196, 0)')
   ctx.fillStyle = lightColumn
   ctx.fillRect(0, 0, width, height)
+
+  const source = document.createElement('canvas')
+  source.width = width
+  source.height = height
+  const sourceCtx = source.getContext('2d')
+
+  if (sourceCtx) {
+    sourceCtx.drawImage(canvas, 0, 0)
+    ctx.clearRect(0, 0, width, height)
+    ctx.filter = 'blur(8px)'
+    ctx.drawImage(source, -8, -8, width + 16, height + 16)
+    ctx.filter = 'none'
+    ctx.globalAlpha = 0.24
+    ctx.drawImage(source, 0, 0)
+    ctx.globalAlpha = 1
+  }
 
   const texture = new CanvasTexture(canvas)
   texture.mapping = EquirectangularReflectionMapping
   texture.colorSpace = SRGBColorSpace
   texture.anisotropy = 8
+  texture.generateMipmaps = true
+  texture.minFilter = LinearMipmapLinearFilter
+  texture.magFilter = LinearFilter
   return texture
 }
 
