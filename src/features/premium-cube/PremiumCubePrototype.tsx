@@ -86,7 +86,8 @@ type FaceArtifactProps = {
 function FaceArtifact({ copy, section }: FaceArtifactProps) {
   if (section.id === 'agentic') {
     return (
-      <div className="face-artifact face-artifact--agentic" aria-label={copy.artifacts.agentic}>
+      <div className="obsidian-card face-artifact face-artifact--agentic" aria-label={copy.artifacts.agentic}>
+        <span className="obsidian-card__shine" aria-hidden="true" />
         <div className="face-artifact__header">
           <span>{copy.artifacts.agentic}</span>
           <strong>04</strong>
@@ -105,14 +106,16 @@ function FaceArtifact({ copy, section }: FaceArtifactProps) {
 
   if (section.id === 'products') {
     return (
-      <div className="face-artifact face-artifact--products" aria-label={copy.artifacts.products}>
+      <div className="obsidian-card face-artifact face-artifact--products" aria-label={copy.artifacts.products}>
+        <span className="obsidian-card__shine" aria-hidden="true" />
         <div className="face-artifact__header">
           <span>{copy.artifacts.products}</span>
           <strong>{String(section.links?.length ?? 0).padStart(2, '0')}</strong>
         </div>
         <div className="product-preview-grid">
           {(section.links ?? []).slice(0, 3).map((link, index) => (
-            <article className="product-preview" key={link.label}>
+            <article className="obsidian-card product-preview" key={link.label}>
+              <span className="obsidian-card__shine" aria-hidden="true" />
               <small>{String(index + 1).padStart(2, '0')}</small>
               <h3>{link.label}</h3>
               {link.description && <p>{link.description}</p>}
@@ -125,7 +128,8 @@ function FaceArtifact({ copy, section }: FaceArtifactProps) {
 
   if (section.id === 'systems') {
     return (
-      <div className="face-artifact face-artifact--systems" aria-label={copy.artifacts.systems}>
+      <div className="obsidian-card face-artifact face-artifact--systems" aria-label={copy.artifacts.systems}>
+        <span className="obsidian-card__shine" aria-hidden="true" />
         <div className="face-artifact__header">
           <span>{copy.artifacts.systems}</span>
           <strong>OPS</strong>
@@ -143,7 +147,8 @@ function FaceArtifact({ copy, section }: FaceArtifactProps) {
 
   if (section.id === 'security') {
     return (
-      <div className="face-artifact face-artifact--security" aria-label={copy.artifacts.security}>
+      <div className="obsidian-card face-artifact face-artifact--security" aria-label={copy.artifacts.security}>
+        <span className="obsidian-card__shine" aria-hidden="true" />
         <div className="face-artifact__header">
           <span>{copy.artifacts.security}</span>
           <strong>SAFE</strong>
@@ -159,7 +164,8 @@ function FaceArtifact({ copy, section }: FaceArtifactProps) {
 
   if (section.id === 'research') {
     return (
-      <div className="face-artifact face-artifact--research" aria-label={copy.artifacts.research}>
+      <div className="obsidian-card face-artifact face-artifact--research" aria-label={copy.artifacts.research}>
+        <span className="obsidian-card__shine" aria-hidden="true" />
         <div className="face-artifact__header">
           <span>{copy.artifacts.research}</span>
           <strong>R&D</strong>
@@ -176,7 +182,8 @@ function FaceArtifact({ copy, section }: FaceArtifactProps) {
   }
 
   return (
-    <div className="face-artifact face-artifact--contact" aria-label={copy.artifacts.contact}>
+    <div className="obsidian-card face-artifact face-artifact--contact" aria-label={copy.artifacts.contact}>
+      <span className="obsidian-card__shine" aria-hidden="true" />
       <div className="face-artifact__header">
         <span>{copy.artifacts.contact}</span>
         <strong>OPEN</strong>
@@ -278,6 +285,52 @@ export function PremiumCubePrototype() {
 
   useEffect(() => {
     sectionPanelRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [activeSectionId])
+
+  useEffect(() => {
+    const panel = sectionPanelRef.current
+
+    if (!panel) {
+      return
+    }
+
+    function syncCardLight(event: PointerEvent) {
+      const target = event.target instanceof Element ? event.target.closest<HTMLElement>('.obsidian-card') : null
+
+      if (!target) {
+        return
+      }
+
+      const rect = target.getBoundingClientRect()
+      const x = event.clientX - rect.left
+      const y = event.clientY - rect.top
+      const normalizedX = (x / rect.width - 0.5) * 2
+      const normalizedY = (y / rect.height - 0.5) * 2
+
+      target.style.setProperty('--spotlight-x', `${x}px`)
+      target.style.setProperty('--spotlight-y', `${y}px`)
+      target.style.setProperty('--tilt-x', `${(-normalizedY * 1.15).toFixed(2)}deg`)
+      target.style.setProperty('--tilt-y', `${(normalizedX * 1.15).toFixed(2)}deg`)
+    }
+
+    function resetCardLight(event: PointerEvent) {
+      const target = event.target instanceof Element ? event.target.closest<HTMLElement>('.obsidian-card') : null
+
+      if (!target) {
+        return
+      }
+
+      target.style.setProperty('--tilt-x', '0deg')
+      target.style.setProperty('--tilt-y', '0deg')
+    }
+
+    panel.addEventListener('pointermove', syncCardLight)
+    panel.addEventListener('pointerout', resetCardLight)
+
+    return () => {
+      panel.removeEventListener('pointermove', syncCardLight)
+      panel.removeEventListener('pointerout', resetCardLight)
+    }
   }, [activeSectionId])
 
   return (
@@ -402,7 +455,8 @@ export function PremiumCubePrototype() {
                     <h2>{sectionCopy.highlights}</h2>
                     <div className="section-panel__content-grid">
                       {activeSection.highlights.map((highlight, index) => (
-                        <article className="section-panel__highlight" key={highlight}>
+                        <article className="obsidian-card section-panel__highlight" key={highlight}>
+                          <span className="obsidian-card__shine" aria-hidden="true" />
                           <span>{String(index + 1).padStart(2, '0')}</span>
                           <p>{highlight}</p>
                         </article>
@@ -426,12 +480,14 @@ export function PremiumCubePrototype() {
                     <div>
                       {activeSection.links.map((link) =>
                         link.href ? (
-                          <a href={link.href} key={link.label} rel="noreferrer" target="_blank">
+                          <a className="obsidian-card" href={link.href} key={link.label} rel="noreferrer" target="_blank">
+                            <span className="obsidian-card__shine" aria-hidden="true" />
                             <span>{link.label}</span>
                             {link.description && <p>{link.description}</p>}
                           </a>
                         ) : (
-                          <article key={link.label}>
+                          <article className="obsidian-card" key={link.label}>
+                            <span className="obsidian-card__shine" aria-hidden="true" />
                             <span>{link.label}</span>
                             {link.description && <p>{link.description}</p>}
                           </article>

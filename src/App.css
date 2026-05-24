@@ -427,6 +427,68 @@
   gap: clamp(1.8rem, 3vw, 3rem);
 }
 
+.obsidian-card {
+  --spotlight-x: 50%;
+  --spotlight-y: 50%;
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+
+  transform:
+    perspective(900px)
+    rotateX(var(--tilt-x))
+    rotateY(var(--tilt-y))
+    translate3d(0, 0, 0);
+  transition:
+    border-color 180ms ease,
+    box-shadow 220ms ease,
+    transform 180ms ease,
+    background-color 180ms ease;
+  transform-style: preserve-3d;
+}
+
+.obsidian-card:hover {
+  border-color: rgba(240, 210, 180, 0.28);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 0 34px rgba(194, 138, 90, 0.055);
+}
+
+.obsidian-card__shine {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0;
+  display: block !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: none;
+  content: '';
+  background:
+    radial-gradient(
+      circle at var(--spotlight-x) var(--spotlight-y),
+      rgba(240, 210, 180, 0.22),
+      rgba(154, 203, 242, 0.09) 18%,
+      transparent 42%
+    ),
+    linear-gradient(118deg, transparent 0 34%, rgba(255, 255, 255, 0.052) 44%, transparent 56%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 36%);
+  opacity: 0;
+  mix-blend-mode: screen;
+  transition: opacity 220ms ease;
+}
+
+.obsidian-card:hover > .obsidian-card__shine {
+  opacity: 1;
+}
+
+.obsidian-card > *:not(.obsidian-card__shine) {
+  position: relative;
+  z-index: 1;
+}
+
 .face-artifact {
   position: relative;
   display: grid;
@@ -556,6 +618,7 @@
 }
 
 .product-preview {
+  position: relative;
   display: grid;
   gap: 0.7rem;
   align-content: start;
@@ -769,6 +832,15 @@
 }
 
 .section-panel__highlight span {
+  display: block;
+  margin-bottom: 1.4rem;
+  color: rgba(194, 138, 90, 0.78);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+}
+
+.section-panel__highlight > span:not(.obsidian-card__shine) {
   display: block;
   margin-bottom: 1.4rem;
   color: rgba(194, 138, 90, 0.78);
