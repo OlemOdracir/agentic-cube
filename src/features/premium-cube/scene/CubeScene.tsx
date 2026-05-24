@@ -78,8 +78,8 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
   const isNarrow = size.width < 720
   const cubeScale = isNarrow ? 0.62 : 0.74
   const cubeBaseY = isNarrow ? 0.14 : 0.18
-  const platformScale = isNarrow ? 0.7 : 0.8
-  const platformBaseY = isNarrow ? 0.08 : -0.05
+  const platformScale = isNarrow ? 0.62 : 0.68
+  const platformBaseY = isNarrow ? 0.08 : -0.09
   const cameraPosition = isNarrow ? ([0, 0.66, 7.4] as const) : ([0, 0.86, 7.45] as const)
   const cameraTargetY = isNarrow ? 0.02 : -0.14
 
@@ -364,23 +364,23 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
 
       <group scale={platformScale} position={[0, platformBaseY, 0]}>
         <mesh position={[0, -1.44, 0]} receiveShadow={effects.shadows} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[2.7, 128]} />
-          <meshStandardMaterial color="#05060c" metalness={0.75} roughness={0.22} transparent opacity={0.52} />
+          <circleGeometry args={[2.5, 128]} />
+          <meshStandardMaterial color="#05060c" metalness={0.78} roughness={0.32} transparent opacity={0.34} />
         </mesh>
 
         <mesh position={[0, -1.425, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[1.12, 1.145, 180]} />
-          <meshBasicMaterial color="#9acbf2" transparent opacity={0.68} />
+          <meshBasicMaterial color="#9acbf2" transparent opacity={0.42} />
         </mesh>
 
         <mesh position={[0, -1.42, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[1.78, 1.786, 180]} />
-          <meshBasicMaterial color="#c28a5a" transparent opacity={0.2} />
+          <meshBasicMaterial color="#c28a5a" transparent opacity={0.12} />
         </mesh>
 
         <mesh position={[0, -1.418, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[2.22, 2.226, 220]} />
-          <meshBasicMaterial color="#f2e0c8" transparent opacity={0.08} />
+          <meshBasicMaterial color="#f2e0c8" transparent opacity={0.045} />
         </mesh>
       </group>
 

@@ -91,6 +91,16 @@ Working palette:
 - Avoid oversized marketing headlines except on true section entrances.
 - Use tight, readable editorial blocks.
 - Letter spacing should be restrained.
+- On high-density desktops, prefer editorial density over spectacle. A 5K display at 250% scaling behaves like a roughly 2048px CSS viewport; the page must not look zoomed-in at that size.
+- Desktop content should use wide containers before oversized typography. Keep section H1s below roughly 94px on large CSS viewports unless a specific visual review approves a larger scale.
+
+## Responsive Density
+
+- Treat `1600px-2200px` CSS width as the primary desktop review range.
+- Use wide page containers, not giant centered blocks.
+- Keep first-screen content high enough that the structure is visible without excessive scrolling.
+- Avoid using `vw` alone for major typography; always cap with conservative `clamp()` limits.
+- Validate with browser scale/DPR combinations, not only raw monitor resolution.
 
 ## Motion
 
