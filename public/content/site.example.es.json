@@ -1,55 +1,110 @@
 {
   "locale": "es",
   "identity": {
-    "displayName": "Ricardo Melo",
-    "fullName": "Ricardo Hernan Melo Gallardo",
-    "handle": "OlemOdracir",
-    "role": "Ingeniero de Productos Agenticos"
+    "displayName": "Portfolio Owner",
+    "fullName": "Portfolio Owner",
+    "handle": "your-handle",
+    "role": "Ingeniero de Productos Agénticos"
   },
   "seo": {
-    "title": "Ricardo Melo | Ingeniero de Productos Agenticos",
-    "description": "Prototipo open source de portfolio agentico para desarrollo asistido por IA, sistemas productivos, seguridad e investigacion."
+    "title": "Portfolio Agéntico | Ingeniero de Productos Agénticos",
+    "description": "Prototipo open source de portfolio agéntico para desarrollo asistido por IA, sistemas productivos, seguridad e investigación."
   },
   "hero": {
-    "headline": "Ingeniero de productos agenticos construyendo software asistido por IA desde experiencia real en sistemas productivos.",
-    "summary": "Un prototipo publico para construir productos con agentes, criterio de produccion, herramientas open source e investigacion independiente."
+    "headline": "Ingeniero de productos agénticos construyendo software asistido por IA desde experiencia real en sistemas productivos.",
+    "summary": "Un prototipo público para construir productos con agentes, criterio de producción, herramientas open source e investigación independiente."
   },
   "sections": [
     {
       "id": "agentic",
       "label": "AGENTIC",
-      "title": "Ingenieria de Productos Agenticos",
-      "summary": "Construccion de productos con agentes de IA, especificaciones, prototipos rapidos e iteracion con criterio productivo."
+      "title": "Ingeniería de Productos Agénticos",
+      "summary": "Construcción de productos con agentes de IA, especificaciones, prototipos rápidos e iteración con criterio productivo.",
+      "intro": "Describe aquí tu visión profesional sobre desarrollo agéntico sin publicar información privada.",
+      "highlights": [
+        "Define el método de trabajo que quieres demostrar.",
+        "Explica cómo conviertes ideas en prototipos verificables.",
+        "Conecta tu experiencia previa con tu nueva dirección profesional."
+      ],
+      "proofPoints": [
+        "Este sitio puede actuar como evidencia pública del flujo de trabajo.",
+        "El contenido real se carga desde archivos locales ignorados por Git."
+      ]
     },
     {
       "id": "products",
       "label": "PRODUCTS",
-      "title": "Productos Publicos",
-      "summary": "Herramientas open source y experimentos de producto que demuestran ejecucion, seguridad y usabilidad."
+      "title": "Productos Públicos",
+      "summary": "Herramientas open source y experimentos de producto que demuestran ejecución, seguridad y usabilidad.",
+      "intro": "Usa esta sección para destacar pocos productos relevantes, no un inventario completo.",
+      "highlights": [
+        "Producto o repositorio principal.",
+        "Prototipo actual como evidencia del proceso.",
+        "Criterio de diseño, utilidad y mantenimiento."
+      ],
+      "proofPoints": [
+        "Agrega links públicos solo cuando estén listos para revisión."
+      ]
     },
     {
       "id": "systems",
       "label": "SYSTEMS",
       "title": "Sistemas Productivos",
-      "summary": "Experiencia en modernizacion legacy, bases de datos, arquitectura y restricciones operativas reales."
+      "summary": "Experiencia en modernización legacy, bases de datos, arquitectura y restricciones operativas reales.",
+      "intro": "Resume la base técnica que sostiene tu transición profesional.",
+      "highlights": [
+        "Modernización, datos e integraciones.",
+        "Arquitectura y continuidad operacional.",
+        "Dirección futura hacia cloud y producción."
+      ],
+      "proofPoints": [
+        "El enfoque agéntico debe apoyarse en ingeniería convencional sólida."
+      ]
     },
     {
       "id": "security",
       "label": "SECURITY",
       "title": "Criterio de Seguridad",
-      "summary": "Defaults seguros, MFA, rate limiting, validacion y conciencia de riesgo productivo."
+      "summary": "Defaults seguros, MFA, rate limiting, validación y conciencia de riesgo productivo.",
+      "intro": "Explica cómo aplicarás seguridad proporcional según el riesgo real.",
+      "highlights": [
+        "Código público separado de contenido privado.",
+        "Autenticación fuerte para administración.",
+        "Protección progresiva para formularios y backend."
+      ],
+      "proofPoints": [
+        "No publiques secretos, datos personales ni credenciales en el repositorio."
+      ]
     },
     {
       "id": "research",
       "label": "RESEARCH",
       "title": "Investigacion Independiente",
-      "summary": "Trabajo sobre IA, pensamiento, verdad, representacion, papers y escritura de largo aliento."
+      "summary": "Trabajo sobre IA, pensamiento, verdad, representación, papers y escritura de largo aliento.",
+      "intro": "Presenta la línea intelectual sin convertir el sitio en un archivo completo.",
+      "highlights": [
+        "Temas de investigación.",
+        "Relación con IA y producto.",
+        "Capacidad de abstracción aplicada."
+      ],
+      "proofPoints": [
+        "Curar es mejor que volcar todo el material personal."
+      ]
     },
     {
       "id": "contact",
       "label": "CONTACT",
       "title": "Contacto",
-      "summary": "Links profesionales y canales de contacto para colaboracion y oportunidades."
+      "summary": "Links profesionales y canales de contacto para colaboración y oportunidades.",
+      "intro": "Deja canales mínimos para contacto profesional.",
+      "highlights": [
+        "Nombre público.",
+        "GitHub o portfolio.",
+        "Correo profesional cuando exista dominio propio."
+      ],
+      "proofPoints": [
+        "No publiques datos que deban vivir en configuración privada."
+      ]
     }
   ]
 }

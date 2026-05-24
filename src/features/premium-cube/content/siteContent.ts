@@ -11,6 +11,15 @@ const SiteSectionSchema = z.object({
   label: z.string().min(1),
   title: z.string().min(1),
   summary: z.string().min(1),
+  intro: z.string().min(1).optional(),
+  highlights: z.array(z.string().min(1)).optional(),
+  proofPoints: z.array(z.string().min(1)).optional(),
+  cta: z
+    .object({
+      label: z.string().min(1),
+      href: z.string().min(1).optional(),
+    })
+    .optional(),
 })
 
 const SiteContentSchema = z.object({
@@ -39,13 +48,13 @@ const DEFAULT_CONTENT: Record<SiteLocale, SiteContent> = {
   en: {
     locale: 'en',
     identity: {
-      displayName: 'Ricardo Melo',
-      fullName: 'Ricardo Hernan Melo Gallardo',
-      handle: 'OlemOdracir',
+      displayName: 'Portfolio Owner',
+      fullName: 'Portfolio Owner',
+      handle: 'your-handle',
       role: 'Agentic Product Engineer',
     },
     seo: {
-      title: 'Ricardo Melo | Agentic Product Engineer',
+      title: 'Agentic Portfolio | Agentic Product Engineer',
       description:
         'Open-source agentic portfolio prototype for AI-assisted product development, production systems, security, and research.',
     },
@@ -59,19 +68,19 @@ const DEFAULT_CONTENT: Record<SiteLocale, SiteContent> = {
   es: {
     locale: 'es',
     identity: {
-      displayName: 'Ricardo Melo',
-      fullName: 'Ricardo Hernan Melo Gallardo',
-      handle: 'OlemOdracir',
-      role: 'Ingeniero de Productos Agenticos',
+      displayName: 'Portfolio Owner',
+      fullName: 'Portfolio Owner',
+      handle: 'your-handle',
+      role: 'Ingeniero de Productos Agénticos',
     },
     seo: {
-      title: 'Ricardo Melo | Ingeniero de Productos Agenticos',
+      title: 'Portfolio Agéntico | Ingeniero de Productos Agénticos',
       description:
-        'Prototipo open source de portfolio agentico para desarrollo asistido por IA, sistemas productivos, seguridad e investigacion.',
+        'Prototipo open source de portfolio agéntico para desarrollo asistido por IA, sistemas productivos, seguridad e investigación.',
     },
     hero: {
       headline:
-        'Ingeniero de productos agenticos construyendo software asistido por IA desde experiencia real en sistemas productivos.',
+        'Ingeniero de productos agénticos construyendo software asistido por IA desde experiencia real en sistemas productivos.',
       summary:
         'Un prototipo publico para construir productos con agentes, criterio de produccion, herramientas open source e investigacion independiente.',
     },
@@ -128,6 +137,10 @@ export function normalizeSections(sections: SiteSection[]): CubeSection[] {
       title: section?.title ?? fallback.title,
       eyebrow: fallback.eyebrow,
       summary: section?.summary ?? fallback.summary,
+      intro: section?.intro,
+      highlights: section?.highlights,
+      proofPoints: section?.proofPoints,
+      cta: section?.cta,
     }
   })
 }

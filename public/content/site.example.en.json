@@ -1,13 +1,13 @@
 {
   "locale": "en",
   "identity": {
-    "displayName": "Ricardo Melo",
-    "fullName": "Ricardo Hernan Melo Gallardo",
-    "handle": "OlemOdracir",
+    "displayName": "Portfolio Owner",
+    "fullName": "Portfolio Owner",
+    "handle": "your-handle",
     "role": "Agentic Product Engineer"
   },
   "seo": {
-    "title": "Ricardo Melo | Agentic Product Engineer",
+    "title": "Agentic Portfolio | Agentic Product Engineer",
     "description": "Open-source agentic portfolio prototype for AI-assisted product development, production systems, security, and research."
   },
   "hero": {
@@ -19,37 +19,92 @@
       "id": "agentic",
       "label": "AGENTIC",
       "title": "Agentic Product Engineering",
-      "summary": "Building products with AI agents, specs, fast prototypes, and production-minded iteration."
+      "summary": "Building products with AI agents, specs, fast prototypes, and production-minded iteration.",
+      "intro": "Describe your professional vision for agentic development without publishing private information.",
+      "highlights": [
+        "Define the working method you want to demonstrate.",
+        "Explain how you turn ideas into verifiable prototypes.",
+        "Connect your previous experience with your new professional direction."
+      ],
+      "proofPoints": [
+        "This site can act as public evidence of the workflow.",
+        "Real content loads from local files ignored by Git."
+      ]
     },
     {
       "id": "products",
       "label": "PRODUCTS",
       "title": "Public Products",
-      "summary": "Open-source tools and product experiments that demonstrate execution, safety, and usability."
+      "summary": "Open-source tools and product experiments that demonstrate execution, safety, and usability.",
+      "intro": "Use this section to highlight a few relevant products, not a full inventory.",
+      "highlights": [
+        "Main product or repository.",
+        "Current prototype as evidence of process.",
+        "Design judgment, utility, and maintainability."
+      ],
+      "proofPoints": [
+        "Add public links only when they are ready for review."
+      ]
     },
     {
       "id": "systems",
       "label": "SYSTEMS",
       "title": "Production Systems",
-      "summary": "Experience with legacy modernization, databases, architecture, and real operational constraints."
+      "summary": "Experience with legacy modernization, databases, architecture, and real operational constraints.",
+      "intro": "Summarize the technical foundation behind your professional transition.",
+      "highlights": [
+        "Modernization, data, and integrations.",
+        "Architecture and operational continuity.",
+        "Future direction toward cloud and production."
+      ],
+      "proofPoints": [
+        "The agentic approach should be grounded in solid conventional engineering."
+      ]
     },
     {
       "id": "security",
       "label": "SECURITY",
       "title": "Security Mindset",
-      "summary": "Secure defaults, MFA, rate limiting, validation, and production risk awareness."
+      "summary": "Secure defaults, MFA, rate limiting, validation, and production risk awareness.",
+      "intro": "Explain how you will apply proportional security according to actual risk.",
+      "highlights": [
+        "Public code separated from private content.",
+        "Strong authentication for administration.",
+        "Progressive protection for forms and backend."
+      ],
+      "proofPoints": [
+        "Do not publish secrets, personal data, or credentials in the repository."
+      ]
     },
     {
       "id": "research",
       "label": "RESEARCH",
       "title": "Independent Research",
-      "summary": "Work on AI, thought, truth, representation, papers, and long-form writing."
+      "summary": "Work on AI, thought, truth, representation, papers, and long-form writing.",
+      "intro": "Present the intellectual line without turning the site into a complete archive.",
+      "highlights": [
+        "Research themes.",
+        "Relationship with AI and product.",
+        "Applied abstraction capability."
+      ],
+      "proofPoints": [
+        "Curation is better than dumping all personal material."
+      ]
     },
     {
       "id": "contact",
       "label": "CONTACT",
       "title": "Contact",
-      "summary": "Professional links and contact channels for collaboration and opportunities."
+      "summary": "Professional links and contact channels for collaboration and opportunities.",
+      "intro": "Leave minimal channels for professional contact.",
+      "highlights": [
+        "Public name.",
+        "GitHub or portfolio.",
+        "Professional email once a custom domain exists."
+      ],
+      "proofPoints": [
+        "Do not publish data that should live in private configuration."
+      ]
     }
   ]
 }

@@ -25,6 +25,7 @@ export function PremiumCubePrototype() {
     () => sections.find((section) => section.id === activeSectionId) ?? null,
     [activeSectionId, sections],
   )
+  const sectionCopy = locale === 'es' ? { proof: 'Prueba', back: 'Volver al cubo' } : { proof: 'Proof', back: 'Back to cube' }
 
   useEffect(() => {
     function syncViewport() {
@@ -113,8 +114,31 @@ export function PremiumCubePrototype() {
             <p className="section-panel__eyebrow">{activeSection.eyebrow}</p>
             <h1>{activeSection.title}</h1>
             <p>{activeSection.summary}</p>
+            {activeSection.intro && <p className="section-panel__intro">{activeSection.intro}</p>}
+            {activeSection.highlights && activeSection.highlights.length > 0 && (
+              <div className="section-panel__content-grid" aria-label="Highlights">
+                {activeSection.highlights.map((highlight) => (
+                  <p key={highlight}>{highlight}</p>
+                ))}
+              </div>
+            )}
+            {activeSection.proofPoints && activeSection.proofPoints.length > 0 && (
+              <div className="section-panel__proof" aria-label="Proof points">
+                <span>{sectionCopy.proof}</span>
+                <ul>
+                  {activeSection.proofPoints.map((proofPoint) => (
+                    <li key={proofPoint}>{proofPoint}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {activeSection.cta?.href && (
+              <a className="section-panel__cta" href={activeSection.cta.href} rel="noreferrer" target="_blank">
+                {activeSection.cta.label}
+              </a>
+            )}
             <button type="button" onClick={() => setActiveSectionId(null)}>
-              Back to cube
+              {sectionCopy.back}
             </button>
           </div>
         )}

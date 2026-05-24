@@ -8,6 +8,13 @@ export type CubeSection = {
   title: string
   eyebrow: string
   summary: string
+  intro?: string
+  highlights?: string[]
+  proofPoints?: string[]
+  cta?: {
+    label: string
+    href?: string
+  }
 }
 
 export const CUBE_SECTIONS: CubeSection[] = [

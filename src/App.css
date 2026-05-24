@@ -129,6 +129,7 @@
   align-items: start;
   justify-items: start;
   min-height: 100%;
+  overflow-y: auto;
   padding: clamp(1.25rem, 4vw, 4.5rem);
   pointer-events: none;
   background:
@@ -148,8 +149,9 @@
 }
 
 .section-panel__inner {
-  width: min(64rem, 100%);
+  width: min(72rem, 100%);
   padding-top: clamp(4rem, 9vh, 8rem);
+  padding-bottom: clamp(3rem, 7vh, 6rem);
   color: rgba(240, 246, 252, 0.92);
   text-align: left;
 }
@@ -180,7 +182,69 @@
   line-height: 1.65;
 }
 
+.section-panel__intro {
+  color: rgba(233, 240, 247, 0.84) !important;
+}
+
+.section-panel__content-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  max-width: 68rem;
+  margin-top: clamp(1.6rem, 3vw, 2.8rem);
+  border: 1px solid rgba(154, 203, 242, 0.13);
+  background: rgba(154, 203, 242, 0.1);
+}
+
+.section-panel__content-grid p {
+  min-height: 9rem;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: clamp(1rem, 1.7vw, 1.45rem);
+  color: rgba(215, 226, 236, 0.8) !important;
+  background: rgba(5, 8, 14, 0.86);
+  font-size: clamp(0.86rem, 0.92vw, 0.98rem) !important;
+  line-height: 1.58 !important;
+}
+
+.section-panel__proof {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: clamp(1rem, 2vw, 1.6rem);
+  align-items: start;
+  max-width: 60rem;
+  margin-top: clamp(1.3rem, 2.4vw, 2rem);
+  padding-top: 1.2rem;
+  border-top: 1px solid rgba(154, 203, 242, 0.16);
+}
+
+.section-panel__proof span {
+  color: rgba(194, 138, 90, 0.78);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.section-panel__proof ul {
+  display: grid;
+  gap: 0.72rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.section-panel__proof li {
+  color: rgba(202, 214, 226, 0.76);
+  font-size: clamp(0.9rem, 0.96vw, 1rem);
+  line-height: 1.55;
+}
+
+.section-panel__cta,
 .section-panel button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-top: 2rem;
   padding: 0.78rem 1rem;
   border: 1px solid rgba(154, 203, 242, 0.28);
@@ -188,8 +252,17 @@
   color: rgba(236, 245, 252, 0.88);
   background: rgba(5, 10, 18, 0.58);
   cursor: pointer;
+  font-size: 0.92rem;
+  text-decoration: none;
 }
 
+.section-panel__cta {
+  margin-right: 0.7rem;
+  border-color: rgba(194, 138, 90, 0.36);
+  color: rgba(250, 237, 224, 0.9);
+}
+
+.section-panel__cta:hover,
 .section-panel button:hover {
   border-color: rgba(194, 138, 90, 0.46);
   background: rgba(12, 18, 28, 0.72);
@@ -272,5 +345,17 @@
 
   .section-panel h1 {
     max-width: 10ch;
+  }
+
+  .section-panel__content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-panel__content-grid p {
+    min-height: auto;
+  }
+
+  .section-panel__proof {
+    grid-template-columns: 1fr;
   }
 }
