@@ -90,6 +90,37 @@
   pointer-events: none;
 }
 
+.language-toggle {
+  position: absolute;
+  top: clamp(1rem, 2vw, 1.6rem);
+  right: clamp(1rem, 2vw, 1.6rem);
+  z-index: 10;
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.22rem;
+  border: 1px solid rgba(154, 203, 242, 0.16);
+  border-radius: 6px;
+  background: rgba(3, 6, 12, 0.48);
+}
+
+.language-toggle button {
+  min-width: 2.2rem;
+  padding: 0.35rem 0.48rem;
+  border: 0;
+  border-radius: 4px;
+  color: rgba(202, 214, 226, 0.64);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.language-toggle button.is-active {
+  color: rgba(247, 250, 253, 0.94);
+  background: rgba(154, 203, 242, 0.14);
+}
+
 .section-panel {
   position: absolute;
   inset: 0;

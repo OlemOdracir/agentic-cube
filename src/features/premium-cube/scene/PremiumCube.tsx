@@ -3,9 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { useMemo } from 'react'
 import { AdditiveBlending, CanvasTexture, Color, SRGBColorSpace } from 'three'
 import type { Mesh, MeshBasicMaterial } from 'three'
-import { CUBE_SECTIONS } from '../cubeSections'
-
-const FACE_LABELS = CUBE_SECTIONS.map((section) => section.label)
+import type { CubeSection } from '../cubeSections'
 
 function createFaceTexture(label: string, index: number) {
   const size = 768
@@ -178,11 +176,13 @@ function ShineGlints({ animate }: ShineGlintsProps) {
 
 type PremiumCubeProps = {
   animateGlints: boolean
+  sections: CubeSection[]
   shadows: boolean
 }
 
-export function PremiumCube({ animateGlints, shadows }: PremiumCubeProps) {
-  const faceTextures = useMemo(() => FACE_LABELS.map(createFaceTexture), [])
+export function PremiumCube({ animateGlints, sections, shadows }: PremiumCubeProps) {
+  const faceLabels = useMemo(() => sections.map((section) => section.label), [sections])
+  const faceTextures = useMemo(() => faceLabels.map(createFaceTexture), [faceLabels])
   const facePanels = [
     { position: [0, 0, 1.112] as const, rotation: [0, 0, 0] as const, texture: faceTextures[0] },
     { position: [1.112, 0, 0] as const, rotation: [0, Math.PI / 2, 0] as const, texture: faceTextures[1] },
@@ -211,7 +211,7 @@ export function PremiumCube({ animateGlints, shadows }: PremiumCubeProps) {
       </RoundedBox>
 
       {facePanels.map((panel, index) => (
-        <mesh key={FACE_LABELS[index]} position={panel.position} rotation={panel.rotation}>
+        <mesh key={sections[index].id} position={panel.position} rotation={panel.rotation}>
           <planeGeometry args={[1.62, 1.62]} />
           <meshBasicMaterial
             map={panel.texture}

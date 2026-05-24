@@ -1,5 +1,7 @@
 export type CubeSectionId = 'agentic' | 'products' | 'systems' | 'security' | 'research' | 'contact'
 
+export const CUBE_FACE_ORDER: CubeSectionId[] = ['agentic', 'products', 'systems', 'security', 'research', 'contact']
+
 export type CubeSection = {
   id: CubeSectionId
   label: string

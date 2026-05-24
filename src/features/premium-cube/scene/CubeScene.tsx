@@ -11,6 +11,7 @@ import {
   updateCubeDragSound,
 } from '../audio/cubeAudio'
 import type { CubeSectionId } from '../cubeSections'
+import type { CubeSection } from '../cubeSections'
 import type { DiagnosticFx } from '../diagnosticFx'
 import { CampusEnvironment } from './CampusEnvironment'
 import { PremiumCube } from './PremiumCube'
@@ -20,6 +21,7 @@ type CubeSceneProps = {
   onCursorModeChange: (mode: 'default' | 'grab' | 'grabbing') => void
   onSectionEnter: (sectionId: CubeSectionId) => void
   sectionOpen: boolean
+  sections: CubeSection[]
 }
 
 type PointerEventLike = {
@@ -45,7 +47,7 @@ function easeInOutCubic(value: number) {
   return value < 0.5 ? 4 * value * value * value : 1 - (-2 * value + 2) ** 3 / 2
 }
 
-export function CubeScene({ effects, onCursorModeChange, onSectionEnter, sectionOpen }: CubeSceneProps) {
+export function CubeScene({ effects, onCursorModeChange, onSectionEnter, sectionOpen, sections }: CubeSceneProps) {
   const rigRef = useRef<Group>(null)
   const pointerRef = useRef(new Vector2(0, 0))
   const transitionRef = useRef({
@@ -357,7 +359,7 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
           }
         }}
       >
-        <PremiumCube animateGlints={effects.glints} shadows={effects.shadows} />
+        <PremiumCube animateGlints={effects.glints} sections={sections} shadows={effects.shadows} />
       </group>
 
       <group scale={platformScale} position={[0, platformBaseY, 0]}>

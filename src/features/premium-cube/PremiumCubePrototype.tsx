@@ -1,15 +1,16 @@
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import type { ReactElement } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Bloom, EffectComposer, Noise, Vignette } from '@react-three/postprocessing'
-import { CUBE_SECTIONS } from './cubeSections'
-import type { CubeSection } from './cubeSections'
+import type { CubeSectionId } from './cubeSections'
+import { useSiteContent } from './content/useSiteContent'
 import { readDiagnosticFx } from './diagnosticFx'
 import { CubeScene } from './scene/CubeScene'
 
 export function PremiumCubePrototype() {
   const [cursorMode, setCursorMode] = useState<'default' | 'grab' | 'grabbing'>('default')
-  const [activeSection, setActiveSection] = useState<CubeSection | null>(null)
+  const [activeSectionId, setActiveSectionId] = useState<CubeSectionId | null>(null)
+  const { content, locale, sections, setLocale } = useSiteContent()
   const [effects] = useState(() => readDiagnosticFx())
   const [viewport, setViewport] = useState(() => ({
     width: typeof window === 'undefined' ? 0 : window.innerWidth,
@@ -20,6 +21,10 @@ export function PremiumCubePrototype() {
     effects.noise ? <Noise key="noise" opacity={0.025} /> : null,
     effects.vignette ? <Vignette key="vignette" eskil={false} offset={0.18} darkness={0.72} /> : null,
   ].filter((effect): effect is ReactElement => effect !== null)
+  const activeSection = useMemo(
+    () => sections.find((section) => section.id === activeSectionId) ?? null,
+    [activeSectionId, sections],
+  )
 
   useEffect(() => {
     function syncViewport() {
@@ -65,9 +70,10 @@ export function PremiumCubePrototype() {
               effects={effects}
               onCursorModeChange={setCursorMode}
               onSectionEnter={(sectionId) => {
-                setActiveSection(CUBE_SECTIONS.find((section) => section.id === sectionId) ?? CUBE_SECTIONS[0])
+                setActiveSectionId(sectionId)
               }}
               sectionOpen={activeSection !== null}
+              sections={sections}
             />
             {postProcessingEffects.length > 0 && (
               <EffectComposer multisampling={4}>{postProcessingEffects}</EffectComposer>
@@ -78,8 +84,27 @@ export function PremiumCubePrototype() {
 
       <div className="prototype-chrome">
         <div className="prototype-kicker">Agentic design study</div>
-        <div className="prototype-mark">Ricardo Portfolio Interface</div>
+        <div className="prototype-mark">{content.identity.displayName} Interface</div>
         <div className="prototype-status">static premium cube pass</div>
+      </div>
+
+      <div className="language-toggle" aria-label="Language">
+        <button
+          aria-pressed={locale === 'en'}
+          className={locale === 'en' ? 'is-active' : ''}
+          type="button"
+          onClick={() => setLocale('en')}
+        >
+          EN
+        </button>
+        <button
+          aria-pressed={locale === 'es'}
+          className={locale === 'es' ? 'is-active' : ''}
+          type="button"
+          onClick={() => setLocale('es')}
+        >
+          ES
+        </button>
       </div>
 
       <section className="section-panel" aria-hidden={!activeSection}>
@@ -88,7 +113,7 @@ export function PremiumCubePrototype() {
             <p className="section-panel__eyebrow">{activeSection.eyebrow}</p>
             <h1>{activeSection.title}</h1>
             <p>{activeSection.summary}</p>
-            <button type="button" onClick={() => setActiveSection(null)}>
+            <button type="button" onClick={() => setActiveSectionId(null)}>
               Back to cube
             </button>
           </div>

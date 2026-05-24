@@ -1,0 +1,167 @@
+import { z } from 'zod'
+import { CUBE_FACE_ORDER, CUBE_SECTIONS } from '../cubeSections'
+import type { CubeSection, CubeSectionId } from '../cubeSections'
+
+export type SiteLocale = 'en' | 'es'
+
+const SectionIdSchema = z.enum(CUBE_FACE_ORDER as [CubeSectionId, ...CubeSectionId[]])
+
+const SiteSectionSchema = z.object({
+  id: SectionIdSchema,
+  label: z.string().min(1),
+  title: z.string().min(1),
+  summary: z.string().min(1),
+})
+
+const SiteContentSchema = z.object({
+  locale: z.enum(['en', 'es']),
+  identity: z.object({
+    displayName: z.string().min(1),
+    fullName: z.string().min(1),
+    handle: z.string().min(1),
+    role: z.string().min(1),
+  }),
+  seo: z.object({
+    title: z.string().min(1),
+    description: z.string().min(1),
+  }),
+  hero: z.object({
+    headline: z.string().min(1),
+    summary: z.string().min(1),
+  }),
+  sections: z.array(SiteSectionSchema).length(CUBE_FACE_ORDER.length),
+})
+
+export type SiteContent = z.infer<typeof SiteContentSchema>
+export type SiteSection = SiteContent['sections'][number]
+
+const DEFAULT_CONTENT: Record<SiteLocale, SiteContent> = {
+  en: {
+    locale: 'en',
+    identity: {
+      displayName: 'Ricardo Melo',
+      fullName: 'Ricardo Hernan Melo Gallardo',
+      handle: 'OlemOdracir',
+      role: 'Agentic Product Engineer',
+    },
+    seo: {
+      title: 'Ricardo Melo | Agentic Product Engineer',
+      description:
+        'Open-source agentic portfolio prototype for AI-assisted product development, production systems, security, and research.',
+    },
+    hero: {
+      headline: 'Agentic Product Engineer building AI-assisted products from real-world systems experience.',
+      summary:
+        'A public prototype for product building with agents, production engineering discipline, open-source tools, and independent research.',
+    },
+    sections: CUBE_SECTIONS.map(({ id, label, title, summary }) => ({ id, label, title, summary })),
+  },
+  es: {
+    locale: 'es',
+    identity: {
+      displayName: 'Ricardo Melo',
+      fullName: 'Ricardo Hernan Melo Gallardo',
+      handle: 'OlemOdracir',
+      role: 'Ingeniero de Productos Agenticos',
+    },
+    seo: {
+      title: 'Ricardo Melo | Ingeniero de Productos Agenticos',
+      description:
+        'Prototipo open source de portfolio agentico para desarrollo asistido por IA, sistemas productivos, seguridad e investigacion.',
+    },
+    hero: {
+      headline:
+        'Ingeniero de productos agenticos construyendo software asistido por IA desde experiencia real en sistemas productivos.',
+      summary:
+        'Un prototipo publico para construir productos con agentes, criterio de produccion, herramientas open source e investigacion independiente.',
+    },
+    sections: [
+      {
+        id: 'agentic',
+        label: 'AGENTIC',
+        title: 'Ingenieria de Productos Agenticos',
+        summary:
+          'Construccion de productos con agentes de IA, especificaciones, prototipos rapidos e iteracion con criterio productivo.',
+      },
+      {
+        id: 'products',
+        label: 'PRODUCTS',
+        title: 'Productos Publicos',
+        summary: 'Herramientas open source y experimentos de producto que demuestran ejecucion, seguridad y usabilidad.',
+      },
+      {
+        id: 'systems',
+        label: 'SYSTEMS',
+        title: 'Sistemas Productivos',
+        summary: 'Experiencia en modernizacion legacy, bases de datos, arquitectura y restricciones operativas reales.',
+      },
+      {
+        id: 'security',
+        label: 'SECURITY',
+        title: 'Criterio de Seguridad',
+        summary: 'Defaults seguros, MFA, rate limiting, validacion y conciencia de riesgo productivo.',
+      },
+      {
+        id: 'research',
+        label: 'RESEARCH',
+        title: 'Investigacion Independiente',
+        summary: 'Trabajo sobre IA, pensamiento, verdad, representacion, papers y escritura de largo aliento.',
+      },
+      {
+        id: 'contact',
+        label: 'CONTACT',
+        title: 'Contacto',
+        summary: 'Links profesionales y canales de contacto para colaboracion y oportunidades.',
+      },
+    ],
+  },
+}
+
+export function normalizeSections(sections: SiteSection[]): CubeSection[] {
+  return CUBE_FACE_ORDER.map((id) => {
+    const section = sections.find((candidate) => candidate.id === id)
+    const fallback = CUBE_SECTIONS.find((candidate) => candidate.id === id)!
+
+    return {
+      id,
+      label: section?.label ?? fallback.label,
+      title: section?.title ?? fallback.title,
+      eyebrow: fallback.eyebrow,
+      summary: section?.summary ?? fallback.summary,
+    }
+  })
+}
+
+export function resolveSiteLocale(search = window.location.search, browserLanguage = navigator.language): SiteLocale {
+  const requestedLocale = new URLSearchParams(search).get('lang')
+
+  if (requestedLocale === 'en' || requestedLocale === 'es') {
+    return requestedLocale
+  }
+
+  return browserLanguage.toLowerCase().startsWith('es') ? 'es' : 'en'
+}
+
+export function getDefaultSiteContent(locale: SiteLocale) {
+  return DEFAULT_CONTENT[locale]
+}
+
+export async function loadSiteContent(locale: SiteLocale): Promise<SiteContent> {
+  const contentPaths = [`/content/site.${locale}.json`, `/content/site.example.${locale}.json`]
+
+  for (const contentPath of contentPaths) {
+    try {
+      const response = await fetch(contentPath, { cache: 'no-store' })
+
+      if (!response.ok) {
+        continue
+      }
+
+      return SiteContentSchema.parse(await response.json())
+    } catch (error) {
+      console.warn(`Could not load site content from ${contentPath}`, error)
+    }
+  }
+
+  return getDefaultSiteContent(locale)
+}
