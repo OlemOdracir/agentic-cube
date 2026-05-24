@@ -11,6 +11,11 @@ export type CubeSection = {
   intro?: string
   highlights?: string[]
   proofPoints?: string[]
+  links?: {
+    label: string
+    description?: string
+    href?: string
+  }[]
   cta?: {
     label: string
     href?: string

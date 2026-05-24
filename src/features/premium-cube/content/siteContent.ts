@@ -14,6 +14,15 @@ const SiteSectionSchema = z.object({
   intro: z.string().min(1).optional(),
   highlights: z.array(z.string().min(1)).optional(),
   proofPoints: z.array(z.string().min(1)).optional(),
+  links: z
+    .array(
+      z.object({
+        label: z.string().min(1),
+        description: z.string().min(1).optional(),
+        href: z.string().min(1).optional(),
+      }),
+    )
+    .optional(),
   cta: z
     .object({
       label: z.string().min(1),
@@ -140,6 +149,7 @@ export function normalizeSections(sections: SiteSection[]): CubeSection[] {
       intro: section?.intro,
       highlights: section?.highlights,
       proofPoints: section?.proofPoints,
+      links: section?.links,
       cta: section?.cta,
     }
   })

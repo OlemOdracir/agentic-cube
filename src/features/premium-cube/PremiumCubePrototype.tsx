@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactElement } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Bloom, EffectComposer, Noise, Vignette } from '@react-three/postprocessing'
@@ -10,6 +10,7 @@ import { CubeScene } from './scene/CubeScene'
 export function PremiumCubePrototype() {
   const [cursorMode, setCursorMode] = useState<'default' | 'grab' | 'grabbing'>('default')
   const [activeSectionId, setActiveSectionId] = useState<CubeSectionId | null>(null)
+  const sectionPanelRef = useRef<HTMLElement | null>(null)
   const { content, locale, sections, setLocale } = useSiteContent()
   const [effects] = useState(() => readDiagnosticFx())
   const [viewport, setViewport] = useState(() => ({
@@ -28,8 +29,8 @@ export function PremiumCubePrototype() {
   const activeSectionIndex = activeSection ? sections.findIndex((section) => section.id === activeSection.id) + 1 : 0
   const sectionCopy =
     locale === 'es'
-      ? { highlights: 'Enfoque', proof: 'Evidencia', back: 'Volver al cubo' }
-      : { highlights: 'Focus', proof: 'Evidence', back: 'Back to cube' }
+      ? { highlights: 'Enfoque', proof: 'Evidencia', links: 'Enlaces', faces: 'Caras', back: 'Volver al cubo' }
+      : { highlights: 'Focus', proof: 'Evidence', links: 'Links', faces: 'Faces', back: 'Back to cube' }
 
   useEffect(() => {
     function syncViewport() {
@@ -48,6 +49,10 @@ export function PremiumCubePrototype() {
       window.removeEventListener('orientationchange', syncViewport)
     }
   }, [])
+
+  useEffect(() => {
+    sectionPanelRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [activeSectionId])
 
   return (
     <main
@@ -112,9 +117,27 @@ export function PremiumCubePrototype() {
         </button>
       </div>
 
-      <section className="section-panel" aria-hidden={!activeSection}>
+      <section className="section-panel" aria-hidden={!activeSection} ref={sectionPanelRef}>
         {activeSection && (
           <div className="section-panel__inner">
+            <nav className="section-panel__face-nav" aria-label={sectionCopy.faces}>
+              <span>{sectionCopy.faces}</span>
+              <div>
+                {sections.map((section, index) => (
+                  <button
+                    aria-current={section.id === activeSection.id ? 'page' : undefined}
+                    className={section.id === activeSection.id ? 'is-active' : ''}
+                    key={section.id}
+                    type="button"
+                    onClick={() => setActiveSectionId(section.id)}
+                  >
+                    <strong>{String(index + 1).padStart(2, '0')}</strong>
+                    {section.label}
+                  </button>
+                ))}
+              </div>
+            </nav>
+
             <div className="section-panel__masthead">
               <div className="section-panel__index" aria-hidden="true">
                 {String(activeSectionIndex).padStart(2, '0')}
@@ -154,6 +177,26 @@ export function PremiumCubePrototype() {
                         <li key={proofPoint}>{proofPoint}</li>
                       ))}
                     </ul>
+                  </section>
+                )}
+                {activeSection.links && activeSection.links.length > 0 && (
+                  <section className="section-panel__links" aria-label={sectionCopy.links}>
+                    <h2>{sectionCopy.links}</h2>
+                    <div>
+                      {activeSection.links.map((link) =>
+                        link.href ? (
+                          <a href={link.href} key={link.label} rel="noreferrer" target="_blank">
+                            <span>{link.label}</span>
+                            {link.description && <p>{link.description}</p>}
+                          </a>
+                        ) : (
+                          <article key={link.label}>
+                            <span>{link.label}</span>
+                            {link.description && <p>{link.description}</p>}
+                          </article>
+                        ),
+                      )}
+                    </div>
                   </section>
                 )}
                 <div className="section-panel__actions">

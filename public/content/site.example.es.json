@@ -44,6 +44,17 @@
       ],
       "proofPoints": [
         "Agrega links públicos solo cuando estén listos para revisión."
+      ],
+      "links": [
+        {
+          "label": "Repositorio principal",
+          "description": "Link público al proyecto que quieras mostrar primero.",
+          "href": "https://github.com/your-handle/your-project"
+        },
+        {
+          "label": "Portfolio",
+          "description": "Este mismo sitio como evidencia del flujo de trabajo agéntico."
+        }
       ]
     },
     {
@@ -104,6 +115,17 @@
       ],
       "proofPoints": [
         "No publiques datos que deban vivir en configuración privada."
+      ],
+      "links": [
+        {
+          "label": "GitHub",
+          "description": "Perfil público o repositorio principal.",
+          "href": "https://github.com/your-handle"
+        },
+        {
+          "label": "Email",
+          "description": "Correo profesional asociado al dominio cuando esté listo."
+        }
       ]
     }
   ]
