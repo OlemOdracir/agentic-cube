@@ -3,8 +3,9 @@ import { useFrame } from '@react-three/fiber'
 import { useMemo } from 'react'
 import { AdditiveBlending, CanvasTexture, Color, SRGBColorSpace } from 'three'
 import type { Mesh, MeshBasicMaterial } from 'three'
+import { CUBE_SECTIONS } from '../cubeSections'
 
-const FACE_LABELS = ['WORK', 'SYSTEMS', 'DESIGN', 'CONTACT', 'ABOUT', 'LAB']
+const FACE_LABELS = CUBE_SECTIONS.map((section) => section.label)
 
 function createFaceTexture(label: string, index: number) {
   const size = 768
@@ -20,16 +21,16 @@ function createFaceTexture(label: string, index: number) {
   ctx.clearRect(0, 0, size, size)
 
   const glow = ctx.createRadialGradient(size * 0.5, size * 0.43, 0, size * 0.5, size * 0.43, size * 0.56)
-  glow.addColorStop(0, 'rgba(128, 184, 224, 0.24)')
-  glow.addColorStop(0.44, 'rgba(42, 55, 92, 0.12)')
+  glow.addColorStop(0, 'rgba(128, 184, 224, 0.34)')
+  glow.addColorStop(0.38, 'rgba(42, 55, 92, 0.18)')
   glow.addColorStop(1, 'rgba(0, 0, 0, 0)')
   ctx.fillStyle = glow
   ctx.fillRect(0, 0, size, size)
 
-  ctx.strokeStyle = 'rgba(210, 228, 242, 0.34)'
+  ctx.strokeStyle = 'rgba(210, 228, 242, 0.44)'
   ctx.lineWidth = 2
   ctx.strokeRect(54, 54, size - 108, size - 108)
-  ctx.strokeStyle = 'rgba(193, 139, 90, 0.4)'
+  ctx.strokeStyle = 'rgba(193, 139, 90, 0.5)'
   ctx.strokeRect(78, 78, size - 156, size - 156)
 
   ctx.save()
@@ -49,14 +50,21 @@ function createFaceTexture(label: string, index: number) {
   ctx.stroke()
   ctx.restore()
 
+  ctx.strokeStyle = 'rgba(154, 203, 242, 0.28)'
+  ctx.lineWidth = 1.5
+  ctx.beginPath()
+  ctx.moveTo(size * 0.24, size * 0.58)
+  ctx.lineTo(size * 0.76, size * 0.58)
+  ctx.stroke()
+
   ctx.fillStyle = 'rgba(238, 244, 250, 0.94)'
-  ctx.font = '500 34px Inter, Arial, sans-serif'
+  ctx.font = '600 34px Inter, Arial, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.letterSpacing = '10px'
   ctx.fillText(label, size * 0.5, size * 0.68)
 
-  ctx.fillStyle = 'rgba(154, 203, 242, 0.72)'
+  ctx.fillStyle = 'rgba(154, 203, 242, 0.76)'
   ctx.font = '500 13px Inter, Arial, sans-serif'
   ctx.fillText(`FACE 0${index + 1}`, size * 0.5, size * 0.77)
 
@@ -80,7 +88,7 @@ function createShineTexture() {
   const gradient = ctx.createRadialGradient(size * 0.5, size * 0.5, 0, size * 0.5, size * 0.5, size * 0.5)
   gradient.addColorStop(0, 'rgba(255,255,255,1)')
   gradient.addColorStop(0.12, 'rgba(196,236,255,0.95)')
-  gradient.addColorStop(0.34, 'rgba(109,187,245,0.26)')
+  gradient.addColorStop(0.3, 'rgba(109,187,245,0.34)')
   gradient.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = gradient
   ctx.fillRect(0, 0, size, size)
@@ -103,7 +111,11 @@ function createShineTexture() {
   return texture
 }
 
-function ShineGlints() {
+type ShineGlintsProps = {
+  animate: boolean
+}
+
+function ShineGlints({ animate }: ShineGlintsProps) {
   const shineTexture = useMemo(() => createShineTexture(), [])
   const glints = useMemo(
     () => [
@@ -111,22 +123,27 @@ function ShineGlints() {
       { position: [1.13, 0.05, 0.72] as const, rotation: [0.08, 1.58, -0.12] as const, scale: 0.22, delay: 1.2 },
       { position: [-0.72, -0.36, 1.13] as const, rotation: [0.1, -0.05, 0.62] as const, scale: 0.16, delay: 2.1 },
       { position: [0.2, 1.13, 0.28] as const, rotation: [-1.48, 0, 0.72] as const, scale: 0.2, delay: 3 },
+      { position: [-1.13, 0.48, -0.24] as const, rotation: [0.06, -1.52, 0.4] as const, scale: 0.14, delay: 4 },
     ],
     [],
   )
   const meshRefs = useMemo(() => [] as Mesh[], [])
 
   useFrame(({ clock }) => {
+    if (!animate) {
+      return
+    }
+
     const t = clock.getElapsedTime()
 
     meshRefs.forEach((mesh, index) => {
       const material = mesh.material as MeshBasicMaterial
-      const pulse = Math.max(0, Math.sin(t * 1.65 + glints[index].delay)) ** 3
-      const scale = glints[index].scale * (0.76 + pulse * 0.5)
+      const pulse = (Math.sin(t * 0.42 + glints[index].delay) + 1) * 0.5
+      const scale = glints[index].scale * (0.94 + pulse * 0.12)
 
-      material.opacity = 0.1 + pulse * 0.82
+      material.opacity = 0.22 + pulse * 0.16
       mesh.scale.setScalar(scale)
-      mesh.rotation.z += 0.002 + pulse * 0.004
+      mesh.rotation.z += 0.0008 + pulse * 0.0005
     })
   })
 
@@ -137,6 +154,7 @@ function ShineGlints() {
           key={index}
           position={glint.position}
           rotation={glint.rotation}
+          scale={glint.scale}
           ref={(node) => {
             if (node) {
               meshRefs[index] = node
@@ -158,42 +176,54 @@ function ShineGlints() {
   )
 }
 
-export function PremiumCube() {
+type PremiumCubeProps = {
+  animateGlints: boolean
+  shadows: boolean
+}
+
+export function PremiumCube({ animateGlints, shadows }: PremiumCubeProps) {
   const faceTextures = useMemo(() => FACE_LABELS.map(createFaceTexture), [])
   const facePanels = [
-    { position: [0, 0, 1.096] as const, rotation: [0, 0, 0] as const, texture: faceTextures[0] },
-    { position: [1.096, 0, 0] as const, rotation: [0, Math.PI / 2, 0] as const, texture: faceTextures[1] },
-    { position: [0, 1.096, 0] as const, rotation: [-Math.PI / 2, 0, 0] as const, texture: faceTextures[2] },
+    { position: [0, 0, 1.112] as const, rotation: [0, 0, 0] as const, texture: faceTextures[0] },
+    { position: [1.112, 0, 0] as const, rotation: [0, Math.PI / 2, 0] as const, texture: faceTextures[1] },
+    { position: [0, 1.112, 0] as const, rotation: [-Math.PI / 2, 0, 0] as const, texture: faceTextures[2] },
+    { position: [0, 0, -1.112] as const, rotation: [0, Math.PI, 0] as const, texture: faceTextures[3] },
+    { position: [-1.112, 0, 0] as const, rotation: [0, -Math.PI / 2, 0] as const, texture: faceTextures[4] },
+    { position: [0, -1.112, 0] as const, rotation: [Math.PI / 2, 0, 0] as const, texture: faceTextures[5] },
   ]
 
   return (
     <group>
-      <RoundedBox args={[2.18, 2.18, 2.18]} radius={0.105} smoothness={9} castShadow receiveShadow>
+      <RoundedBox args={[2.18, 2.18, 2.18]} radius={0.105} smoothness={9} castShadow={shadows} receiveShadow={shadows}>
         <meshPhysicalMaterial
-          color={new Color('#12151e')}
-          metalness={0.88}
-          roughness={0.08}
+          color={new Color('#0c111a')}
+          metalness={0.92}
+          roughness={0.055}
           clearcoat={1}
-          clearcoatRoughness={0.045}
-          emissive={new Color('#0a1726')}
-          emissiveIntensity={0.36}
+          clearcoatRoughness={0.032}
+          emissive={new Color('#06101b')}
+          emissiveIntensity={0.32}
           reflectivity={0.96}
+          transmission={0.06}
+          thickness={0.22}
+          ior={1.54}
         />
       </RoundedBox>
 
       {facePanels.map((panel, index) => (
         <mesh key={FACE_LABELS[index]} position={panel.position} rotation={panel.rotation}>
-          <planeGeometry args={[1.58, 1.58]} />
-          <meshBasicMaterial map={panel.texture} transparent opacity={0.88} depthWrite={false} />
+          <planeGeometry args={[1.62, 1.62]} />
+          <meshBasicMaterial
+            map={panel.texture}
+            transparent
+            opacity={0.94}
+            depthWrite={false}
+            toneMapped={false}
+          />
         </mesh>
       ))}
 
-      <mesh position={[0, 0, 0]} scale={1.012}>
-        <boxGeometry args={[2.18, 2.18, 2.18]} />
-        <meshBasicMaterial color="#dff5ff" transparent opacity={0.045} wireframe blending={AdditiveBlending} />
-      </mesh>
-
-      <ShineGlints />
+      <ShineGlints animate={animateGlints} />
     </group>
   )
 }

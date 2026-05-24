@@ -9,6 +9,8 @@ export function CampusEnvironment() {
     texture.mapping = EquirectangularReflectionMapping
     texture.colorSpace = SRGBColorSpace
     texture.anisotropy = 8
+    texture.repeat.set(1.8, 1)
+    texture.offset.set(0.18, 0)
     texture.needsUpdate = true
     return texture
   }, [])

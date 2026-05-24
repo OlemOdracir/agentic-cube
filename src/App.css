@@ -1,6 +1,8 @@
 .prototype-shell {
   position: relative;
+  display: block;
   width: 100vw;
+  max-width: none;
   height: 100vh;
   height: 100svh;
   min-height: 100svh;
@@ -36,6 +38,7 @@
     linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
   background-size: 72px 72px;
   mask-image: radial-gradient(circle at 50% 48%, black 0 38%, transparent 72%);
+  transition: opacity 520ms ease;
 }
 
 .prototype-shell::after {
@@ -47,6 +50,12 @@
   background:
     radial-gradient(ellipse at center, transparent 0 36%, rgba(0, 0, 0, 0.52) 82%),
     linear-gradient(180deg, rgba(0, 0, 0, 0.28), transparent 24%, rgba(0, 0, 0, 0.42));
+  transition: opacity 520ms ease;
+}
+
+.prototype-shell.has-section::before,
+.prototype-shell.has-section::after {
+  opacity: 0;
 }
 
 .cube-canvas {
@@ -54,8 +63,15 @@
   inset: 0;
   z-index: 0;
   width: 100vw;
+  max-width: none;
   height: 100vh;
   height: 100svh;
+  transition: opacity 520ms ease 120ms;
+}
+
+.prototype-shell.has-section .cube-canvas {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .cube-canvas canvas {
@@ -72,6 +88,80 @@
   grid-template-rows: auto 1fr auto;
   visibility: hidden;
   pointer-events: none;
+}
+
+.section-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  align-items: start;
+  justify-items: start;
+  min-height: 100%;
+  padding: clamp(1.25rem, 4vw, 4.5rem);
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(154, 203, 242, 0.12), transparent 24rem),
+    linear-gradient(180deg, #05070d 0%, #090b11 52%, #05060a 100%);
+  opacity: 0;
+  transition:
+    opacity 520ms ease 180ms,
+    transform 760ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform: translate3d(0, 1.8rem, 0);
+}
+
+.prototype-shell.has-section .section-panel {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.section-panel__inner {
+  width: min(64rem, 100%);
+  padding-top: clamp(4rem, 9vh, 8rem);
+  color: rgba(240, 246, 252, 0.92);
+  text-align: left;
+}
+
+.section-panel__eyebrow {
+  margin: 0 0 0.9rem;
+  color: rgba(154, 203, 242, 0.78);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.section-panel h1 {
+  max-width: 11ch;
+  margin: 0;
+  color: rgba(247, 250, 253, 0.96);
+  font-size: clamp(2.4rem, 6vw, 5.4rem);
+  font-weight: 650;
+  line-height: 0.92;
+}
+
+.section-panel p:not(.section-panel__eyebrow) {
+  max-width: 42rem;
+  margin: 1.25rem 0 0;
+  color: rgba(202, 214, 226, 0.76);
+  font-size: clamp(1rem, 1.2vw, 1.18rem);
+  line-height: 1.65;
+}
+
+.section-panel button {
+  margin-top: 2rem;
+  padding: 0.78rem 1rem;
+  border: 1px solid rgba(154, 203, 242, 0.28);
+  border-radius: 6px;
+  color: rgba(236, 245, 252, 0.88);
+  background: rgba(5, 10, 18, 0.58);
+  cursor: pointer;
+}
+
+.section-panel button:hover {
+  border-color: rgba(194, 138, 90, 0.46);
+  background: rgba(12, 18, 28, 0.72);
 }
 
 .prototype-kicker,
@@ -135,5 +225,21 @@
   .prototype-status {
     width: min(88vw, 420px);
     gap: 0.7rem;
+  }
+
+  .section-panel {
+    align-items: start;
+    padding-top: 1.25rem;
+    padding-bottom: 2.2rem;
+  }
+
+  .section-panel__inner {
+    width: min(100%, 27rem);
+    padding-right: 0;
+    padding-top: 5.5rem;
+  }
+
+  .section-panel h1 {
+    max-width: 10ch;
   }
 }
