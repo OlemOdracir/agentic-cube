@@ -7,6 +7,70 @@ import { useSiteContent } from './content/useSiteContent'
 import { readDiagnosticFx } from './diagnosticFx'
 import { CubeScene } from './scene/CubeScene'
 
+function SectionGlyph({ sectionId }: { sectionId: CubeSectionId }) {
+  const accentBySection: Record<CubeSectionId, string> = {
+    agentic: '#9acbf2',
+    products: '#c28a5a',
+    systems: '#b9c7d6',
+    security: '#89d6c7',
+    research: '#b9a7ff',
+    contact: '#f0d2b4',
+  }
+  const accent = accentBySection[sectionId]
+
+  return (
+    <svg aria-hidden="true" className="section-panel__glyph" viewBox="0 0 160 160">
+      <defs>
+        <radialGradient cx="50%" cy="50%" id={`glyph-glow-${sectionId}`} r="62%">
+          <stop offset="0%" stopColor={accent} stopOpacity="0.55" />
+          <stop offset="46%" stopColor={accent} stopOpacity="0.12" />
+          <stop offset="100%" stopColor={accent} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <circle cx="80" cy="80" fill={`url(#glyph-glow-${sectionId})`} r="76" />
+      <path d="M80 18 142 80 80 142 18 80Z" fill="none" stroke={accent} strokeOpacity="0.52" />
+      <path d="M80 38 122 80 80 122 38 80Z" fill="none" stroke="rgba(240,248,255,0.5)" />
+      {sectionId === 'agentic' && (
+        <>
+          <path d="M48 80h64M80 48v64" stroke={accent} strokeLinecap="round" strokeOpacity="0.82" />
+          <circle cx="80" cy="80" fill={accent} r="4" />
+        </>
+      )}
+      {sectionId === 'products' && (
+        <>
+          <path d="M54 58h52v44H54Z" fill="none" stroke={accent} strokeOpacity="0.82" />
+          <path d="M64 72h32M64 86h22" stroke={accent} strokeLinecap="round" strokeOpacity="0.72" />
+        </>
+      )}
+      {sectionId === 'systems' && (
+        <>
+          <circle cx="55" cy="62" fill="none" r="12" stroke={accent} strokeOpacity="0.82" />
+          <circle cx="105" cy="98" fill="none" r="12" stroke={accent} strokeOpacity="0.82" />
+          <path d="M65 69 95 91M80 50v60" stroke={accent} strokeLinecap="round" strokeOpacity="0.72" />
+        </>
+      )}
+      {sectionId === 'security' && (
+        <>
+          <path d="M80 48 108 60v22c0 22-13 35-28 43-15-8-28-21-28-43V60Z" fill="none" stroke={accent} />
+          <path d="M68 80l8 8 18-20" stroke={accent} strokeLinecap="round" strokeLinejoin="round" />
+        </>
+      )}
+      {sectionId === 'research' && (
+        <>
+          <path d="M52 96c18-42 38-42 56 0M54 66c17 14 35 14 52 0" fill="none" stroke={accent} />
+          <circle cx="80" cy="80" fill="none" r="7" stroke={accent} />
+        </>
+      )}
+      {sectionId === 'contact' && (
+        <>
+          <path d="M50 64h60v42H50Z" fill="none" stroke={accent} />
+          <path d="m52 66 28 24 28-24" fill="none" stroke={accent} strokeLinecap="round" strokeLinejoin="round" />
+        </>
+      )}
+    </svg>
+  )
+}
+
 export function PremiumCubePrototype() {
   const [cursorMode, setCursorMode] = useState<'default' | 'grab' | 'grabbing'>('default')
   const [activeSectionId, setActiveSectionId] = useState<CubeSectionId | null>(null)
@@ -29,8 +93,24 @@ export function PremiumCubePrototype() {
   const activeSectionIndex = activeSection ? sections.findIndex((section) => section.id === activeSection.id) + 1 : 0
   const sectionCopy =
     locale === 'es'
-      ? { highlights: 'Enfoque', proof: 'Evidencia', links: 'Enlaces', faces: 'Caras', back: 'Volver al cubo' }
-      : { highlights: 'Focus', proof: 'Evidence', links: 'Links', faces: 'Faces', back: 'Back to cube' }
+      ? {
+          highlights: 'Enfoque',
+          proof: 'Evidencia',
+          links: 'Enlaces',
+          faces: 'Caras',
+          signal: 'Señal',
+          back: 'Volver al cubo',
+          capabilities: ['Especificar', 'Prototipar', 'Validar', 'Publicar'],
+        }
+      : {
+          highlights: 'Focus',
+          proof: 'Evidence',
+          links: 'Links',
+          faces: 'Faces',
+          signal: 'Signal',
+          back: 'Back to cube',
+          capabilities: ['Specify', 'Prototype', 'Verify', 'Ship'],
+        }
 
   useEffect(() => {
     function syncViewport() {
@@ -93,9 +173,12 @@ export function PremiumCubePrototype() {
       </div>
 
       <div className="prototype-chrome">
-        <div className="prototype-kicker">Agentic design study</div>
-        <div className="prototype-mark">{content.identity.displayName} Interface</div>
-        <div className="prototype-status">static premium cube pass</div>
+        <div className="prototype-kicker">
+          <span>{content.identity.displayName}</span>
+          <small>{content.identity.role}</small>
+        </div>
+        <div className="prototype-mark">{content.identity.handle}</div>
+        <div className="prototype-status">{content.identity.fullName}</div>
       </div>
 
       <div className="language-toggle" aria-label="Language">
@@ -149,7 +232,18 @@ export function PremiumCubePrototype() {
               <div className="section-panel__summary-block">
                 <p className="section-panel__section-label">{activeSection.label}</p>
                 <p className="section-panel__summary">{activeSection.summary}</p>
+                <div className="section-panel__signal">
+                  <span>{sectionCopy.signal}</span>
+                  <div>
+                    {sectionCopy.capabilities.map((capability, index) => (
+                      <small key={capability}>
+                        {String(index + 1).padStart(2, '0')} {capability}
+                      </small>
+                    ))}
+                  </div>
+                </div>
               </div>
+              <SectionGlyph sectionId={activeSection.id} />
             </div>
 
             <div className="section-panel__body">
