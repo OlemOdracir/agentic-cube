@@ -2,7 +2,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactElement } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Bloom, EffectComposer, Noise, Vignette } from '@react-three/postprocessing'
-import type { CubeSectionId } from './cubeSections'
+import type { CubeSection, CubeSectionId } from './cubeSections'
 import { useSiteContent } from './content/useSiteContent'
 import { readDiagnosticFx } from './diagnosticFx'
 import { CubeScene } from './scene/CubeScene'
@@ -71,6 +71,128 @@ function SectionGlyph({ sectionId }: { sectionId: CubeSectionId }) {
   )
 }
 
+type FaceArtifactProps = {
+  copy: {
+    artifacts: Record<CubeSectionId, string>
+    capabilities: string[]
+    contactState: string
+    researchNodes: string[]
+    securityControls: string[]
+    systemNodes: string[]
+  }
+  section: CubeSection
+}
+
+function FaceArtifact({ copy, section }: FaceArtifactProps) {
+  if (section.id === 'agentic') {
+    return (
+      <div className="face-artifact face-artifact--agentic" aria-label={copy.artifacts.agentic}>
+        <div className="face-artifact__header">
+          <span>{copy.artifacts.agentic}</span>
+          <strong>04</strong>
+        </div>
+        <div className="agentic-flow">
+          {copy.capabilities.map((capability, index) => (
+            <div className="agentic-flow__node" key={capability}>
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <p>{capability}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (section.id === 'products') {
+    return (
+      <div className="face-artifact face-artifact--products" aria-label={copy.artifacts.products}>
+        <div className="face-artifact__header">
+          <span>{copy.artifacts.products}</span>
+          <strong>{String(section.links?.length ?? 0).padStart(2, '0')}</strong>
+        </div>
+        <div className="product-preview-grid">
+          {(section.links ?? []).slice(0, 3).map((link, index) => (
+            <article className="product-preview" key={link.label}>
+              <small>{String(index + 1).padStart(2, '0')}</small>
+              <h3>{link.label}</h3>
+              {link.description && <p>{link.description}</p>}
+            </article>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (section.id === 'systems') {
+    return (
+      <div className="face-artifact face-artifact--systems" aria-label={copy.artifacts.systems}>
+        <div className="face-artifact__header">
+          <span>{copy.artifacts.systems}</span>
+          <strong>OPS</strong>
+        </div>
+        <div className="systems-map">
+          {copy.systemNodes.map((node, index) => (
+            <span className={`systems-map__node systems-map__node--${index + 1}`} key={node}>
+              {node}
+            </span>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (section.id === 'security') {
+    return (
+      <div className="face-artifact face-artifact--security" aria-label={copy.artifacts.security}>
+        <div className="face-artifact__header">
+          <span>{copy.artifacts.security}</span>
+          <strong>SAFE</strong>
+        </div>
+        <div className="security-grid">
+          {copy.securityControls.map((control) => (
+            <span key={control}>{control}</span>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (section.id === 'research') {
+    return (
+      <div className="face-artifact face-artifact--research" aria-label={copy.artifacts.research}>
+        <div className="face-artifact__header">
+          <span>{copy.artifacts.research}</span>
+          <strong>R&D</strong>
+        </div>
+        <div className="research-orbit">
+          {copy.researchNodes.map((node, index) => (
+            <span className={`research-orbit__node research-orbit__node--${index + 1}`} key={node}>
+              {node}
+            </span>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="face-artifact face-artifact--contact" aria-label={copy.artifacts.contact}>
+      <div className="face-artifact__header">
+        <span>{copy.artifacts.contact}</span>
+        <strong>OPEN</strong>
+      </div>
+      <div className="contact-stack">
+        {(section.links ?? []).slice(0, 3).map((link) => (
+          <span key={link.label}>
+            {link.label}
+            <small>{copy.contactState}</small>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function PremiumCubePrototype() {
   const [cursorMode, setCursorMode] = useState<'default' | 'grab' | 'grabbing'>('default')
   const [activeSectionId, setActiveSectionId] = useState<CubeSectionId | null>(null)
@@ -101,6 +223,18 @@ export function PremiumCubePrototype() {
           signal: 'Señal',
           back: 'Volver al cubo',
           capabilities: ['Especificar', 'Prototipar', 'Validar', 'Publicar'],
+          contactState: 'Listo',
+          researchNodes: ['Verdad', 'Pensamiento', 'IA', 'Texto', 'Modelo'],
+          securityControls: ['MFA', 'Limite', 'Secretos', 'Auditoria', 'WAF', 'Minimo'],
+          systemNodes: ['Legacy', 'Datos', 'API', 'Cloud', 'Observar'],
+          artifacts: {
+            agentic: 'Flujo agéntico',
+            products: 'Prueba pública',
+            systems: 'Arquitectura',
+            security: 'Controles',
+            research: 'Mapa conceptual',
+            contact: 'Canales',
+          },
         }
       : {
           highlights: 'Focus',
@@ -110,6 +244,18 @@ export function PremiumCubePrototype() {
           signal: 'Signal',
           back: 'Back to cube',
           capabilities: ['Specify', 'Prototype', 'Verify', 'Ship'],
+          contactState: 'Ready',
+          researchNodes: ['Truth', 'Thought', 'AI', 'Text', 'Model'],
+          securityControls: ['MFA', 'Rate', 'Secrets', 'Audit', 'WAF', 'Least'],
+          systemNodes: ['Legacy', 'Data', 'API', 'Cloud', 'Observe'],
+          artifacts: {
+            agentic: 'Agentic flow',
+            products: 'Public proof',
+            systems: 'Architecture',
+            security: 'Controls',
+            research: 'Concept map',
+            contact: 'Channels',
+          },
         }
 
   useEffect(() => {
@@ -249,6 +395,7 @@ export function PremiumCubePrototype() {
             <div className="section-panel__body">
               <div className="section-panel__rail" aria-hidden="true" />
               <div className="section-panel__narrative">
+                <FaceArtifact copy={sectionCopy} section={activeSection} />
                 {activeSection.intro && <p className="section-panel__intro">{activeSection.intro}</p>}
                 {activeSection.highlights && activeSection.highlights.length > 0 && (
                   <section className="section-panel__chapter" aria-label="Highlights">

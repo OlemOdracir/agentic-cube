@@ -4,8 +4,116 @@ import { useMemo } from 'react'
 import { AdditiveBlending, CanvasTexture, Color, SRGBColorSpace } from 'three'
 import type { Mesh, MeshBasicMaterial } from 'three'
 import type { CubeSection } from '../cubeSections'
+import type { CubeSectionId } from '../cubeSections'
 
-function createFaceTexture(label: string, index: number) {
+const FACE_ACCENTS: Record<CubeSectionId, string> = {
+  agentic: 'rgba(154, 203, 242, 0.9)',
+  products: 'rgba(194, 138, 90, 0.92)',
+  systems: 'rgba(185, 199, 214, 0.9)',
+  security: 'rgba(137, 214, 199, 0.9)',
+  research: 'rgba(185, 167, 255, 0.9)',
+  contact: 'rgba(240, 210, 180, 0.9)',
+}
+
+function drawFaceGlyph(ctx: CanvasRenderingContext2D, sectionId: CubeSectionId, x: number, y: number) {
+  const accent = FACE_ACCENTS[sectionId]
+
+  ctx.save()
+  ctx.translate(x, y)
+  ctx.strokeStyle = accent
+  ctx.fillStyle = accent
+  ctx.lineWidth = 5
+  ctx.shadowBlur = 22
+  ctx.shadowColor = accent
+
+  ctx.save()
+  ctx.rotate(Math.PI / 4)
+  ctx.strokeStyle = 'rgba(228, 239, 248, 0.82)'
+  ctx.strokeRect(-74, -74, 148, 148)
+  ctx.strokeStyle = accent
+  ctx.globalAlpha = 0.82
+  ctx.strokeRect(-44, -44, 88, 88)
+  ctx.restore()
+
+  ctx.globalAlpha = 0.92
+
+  if (sectionId === 'agentic') {
+    ctx.beginPath()
+    ctx.moveTo(-94, 0)
+    ctx.lineTo(94, 0)
+    ctx.moveTo(0, -94)
+    ctx.lineTo(0, 94)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.arc(0, 0, 8, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
+  if (sectionId === 'products') {
+    ctx.strokeRect(-58, -42, 116, 84)
+    ctx.beginPath()
+    ctx.moveTo(-36, -16)
+    ctx.lineTo(32, -16)
+    ctx.moveTo(-36, 14)
+    ctx.lineTo(18, 14)
+    ctx.stroke()
+  }
+
+  if (sectionId === 'systems') {
+    ctx.beginPath()
+    ctx.arc(-46, -28, 20, 0, Math.PI * 2)
+    ctx.arc(48, 30, 20, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(-28, -16)
+    ctx.lineTo(30, 18)
+    ctx.moveTo(0, -62)
+    ctx.lineTo(0, 62)
+    ctx.stroke()
+  }
+
+  if (sectionId === 'security') {
+    ctx.beginPath()
+    ctx.moveTo(0, -62)
+    ctx.lineTo(54, -36)
+    ctx.lineTo(54, 14)
+    ctx.quadraticCurveTo(54, 52, 0, 70)
+    ctx.quadraticCurveTo(-54, 52, -54, 14)
+    ctx.lineTo(-54, -36)
+    ctx.closePath()
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(-24, 4)
+    ctx.lineTo(-6, 22)
+    ctx.lineTo(30, -28)
+    ctx.stroke()
+  }
+
+  if (sectionId === 'research') {
+    ctx.beginPath()
+    ctx.moveTo(-58, 34)
+    ctx.bezierCurveTo(-28, -58, 28, -58, 58, 34)
+    ctx.moveTo(-58, -28)
+    ctx.bezierCurveTo(-22, 8, 22, 8, 58, -28)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.arc(0, 0, 13, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+
+  if (sectionId === 'contact') {
+    ctx.strokeRect(-60, -38, 120, 76)
+    ctx.beginPath()
+    ctx.moveTo(-56, -34)
+    ctx.lineTo(0, 12)
+    ctx.lineTo(56, -34)
+    ctx.stroke()
+  }
+
+  ctx.restore()
+}
+
+function createFaceTexture(section: CubeSection, index: number) {
   const size = 768
   const canvas = document.createElement('canvas')
   canvas.width = size
@@ -31,22 +139,7 @@ function createFaceTexture(label: string, index: number) {
   ctx.strokeStyle = 'rgba(193, 139, 90, 0.5)'
   ctx.strokeRect(78, 78, size - 156, size - 156)
 
-  ctx.save()
-  ctx.translate(size * 0.5, size * 0.42)
-  ctx.rotate((Math.PI / 4) * (index % 2 === 0 ? 1 : -1))
-  ctx.strokeStyle = 'rgba(228, 239, 248, 0.82)'
-  ctx.lineWidth = 3
-  ctx.beginPath()
-  ctx.rect(-74, -74, 148, 148)
-  ctx.stroke()
-  ctx.strokeStyle = 'rgba(132, 198, 236, 0.78)'
-  ctx.beginPath()
-  ctx.moveTo(-104, 0)
-  ctx.lineTo(104, 0)
-  ctx.moveTo(0, -104)
-  ctx.lineTo(0, 104)
-  ctx.stroke()
-  ctx.restore()
+  drawFaceGlyph(ctx, section.id, size * 0.5, size * 0.42)
 
   ctx.strokeStyle = 'rgba(154, 203, 242, 0.28)'
   ctx.lineWidth = 1.5
@@ -60,7 +153,7 @@ function createFaceTexture(label: string, index: number) {
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.letterSpacing = '10px'
-  ctx.fillText(label, size * 0.5, size * 0.68)
+  ctx.fillText(section.label, size * 0.5, size * 0.68)
 
   ctx.fillStyle = 'rgba(154, 203, 242, 0.76)'
   ctx.font = '500 13px Inter, Arial, sans-serif'
@@ -181,8 +274,7 @@ type PremiumCubeProps = {
 }
 
 export function PremiumCube({ animateGlints, sections, shadows }: PremiumCubeProps) {
-  const faceLabels = useMemo(() => sections.map((section) => section.label), [sections])
-  const faceTextures = useMemo(() => faceLabels.map(createFaceTexture), [faceLabels])
+  const faceTextures = useMemo(() => sections.map(createFaceTexture), [sections])
   const facePanels = [
     { position: [0, 0, 1.112] as const, rotation: [0, 0, 0] as const, texture: faceTextures[0] },
     { position: [1.112, 0, 0] as const, rotation: [0, Math.PI / 2, 0] as const, texture: faceTextures[1] },
