@@ -2,11 +2,12 @@ type WindowWithWebkitAudio = Window & {
   webkitAudioContext?: typeof AudioContext
 }
 
-const MASTER_VOLUME = 0.16
+const MASTER_VOLUME = 0.28
 const GLASS_FUNDAMENTAL = 704
 
 let audioContext: AudioContext | null = null
 let masterGain: GainNode | null = null
+let dynamicsLimiter: DynamicsCompressorNode | null = null
 let dragOscillator: OscillatorNode | null = null
 let dragOvertone: OscillatorNode | null = null
 let dragFilter: BiquadFilterNode | null = null
@@ -79,8 +80,15 @@ function getAudioContext() {
 
   audioContext = new AudioContextConstructor()
   masterGain = audioContext.createGain()
+  dynamicsLimiter = audioContext.createDynamicsCompressor()
   masterGain.gain.value = MASTER_VOLUME
-  masterGain.connect(audioContext.destination)
+  dynamicsLimiter.threshold.value = -18
+  dynamicsLimiter.knee.value = 12
+  dynamicsLimiter.ratio.value = 7
+  dynamicsLimiter.attack.value = 0.006
+  dynamicsLimiter.release.value = 0.16
+  masterGain.connect(dynamicsLimiter)
+  dynamicsLimiter.connect(audioContext.destination)
 
   return audioContext
 }
@@ -142,7 +150,7 @@ export function updateCubeDragSound(pointerSpeed: number) {
   dragOscillator.frequency.setTargetAtTime(GLASS_FUNDAMENTAL + intensity * 34, now, 0.07)
   dragOvertone?.frequency.setTargetAtTime(GLASS_FUNDAMENTAL * 1.006 + intensity * 41, now, 0.08)
   dragFilter.frequency.setTargetAtTime(GLASS_FUNDAMENTAL + intensity * 110, now, 0.08)
-  dragGain.gain.setTargetAtTime(0.003 + intensity * 0.018, now, 0.05)
+  dragGain.gain.setTargetAtTime(0.007 + intensity * 0.038, now, 0.05)
 }
 
 export function stopCubeDragSound() {
@@ -174,7 +182,7 @@ export function playCubeDragTickSound(pointerSpeed: number) {
   }
 
   const intensity = clamp(pointerSpeed / 54, 0.12, 1)
-  playGlassResonance(GLASS_FUNDAMENTAL + intensity * 96, 0.34 + intensity * 0.32, 0.62)
+  playGlassResonance(GLASS_FUNDAMENTAL + intensity * 96, 0.42 + intensity * 0.42, 0.62)
 }
 
 export async function playCubeFaceClickSound() {
@@ -184,7 +192,7 @@ export async function playCubeFaceClickSound() {
     return
   }
 
-  playGlassResonance(GLASS_FUNDAMENTAL * 1.18, 0.82, 0.88)
+  playGlassResonance(GLASS_FUNDAMENTAL * 1.18, 0.94, 0.88)
 }
 
 export async function playCubeTransitionSound() {
@@ -194,8 +202,8 @@ export async function playCubeTransitionSound() {
     return
   }
 
-  playGlassResonance(GLASS_FUNDAMENTAL * 0.92, 0.72, 1.24)
+  playGlassResonance(GLASS_FUNDAMENTAL * 0.92, 0.88, 1.24)
   window.setTimeout(() => {
-    playGlassResonance(GLASS_FUNDAMENTAL * 1.31, 0.42, 0.86)
+    playGlassResonance(GLASS_FUNDAMENTAL * 1.31, 0.56, 0.86)
   }, 180)
 }
