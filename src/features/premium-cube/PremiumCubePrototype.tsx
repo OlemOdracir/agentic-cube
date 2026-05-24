@@ -25,7 +25,11 @@ export function PremiumCubePrototype() {
     () => sections.find((section) => section.id === activeSectionId) ?? null,
     [activeSectionId, sections],
   )
-  const sectionCopy = locale === 'es' ? { proof: 'Prueba', back: 'Volver al cubo' } : { proof: 'Proof', back: 'Back to cube' }
+  const activeSectionIndex = activeSection ? sections.findIndex((section) => section.id === activeSection.id) + 1 : 0
+  const sectionCopy =
+    locale === 'es'
+      ? { highlights: 'Enfoque', proof: 'Evidencia', back: 'Volver al cubo' }
+      : { highlights: 'Focus', proof: 'Evidence', back: 'Back to cube' }
 
   useEffect(() => {
     function syncViewport() {
@@ -111,35 +115,59 @@ export function PremiumCubePrototype() {
       <section className="section-panel" aria-hidden={!activeSection}>
         {activeSection && (
           <div className="section-panel__inner">
-            <p className="section-panel__eyebrow">{activeSection.eyebrow}</p>
-            <h1>{activeSection.title}</h1>
-            <p>{activeSection.summary}</p>
-            {activeSection.intro && <p className="section-panel__intro">{activeSection.intro}</p>}
-            {activeSection.highlights && activeSection.highlights.length > 0 && (
-              <div className="section-panel__content-grid" aria-label="Highlights">
-                {activeSection.highlights.map((highlight) => (
-                  <p key={highlight}>{highlight}</p>
-                ))}
+            <div className="section-panel__masthead">
+              <div className="section-panel__index" aria-hidden="true">
+                {String(activeSectionIndex).padStart(2, '0')}
               </div>
-            )}
-            {activeSection.proofPoints && activeSection.proofPoints.length > 0 && (
-              <div className="section-panel__proof" aria-label="Proof points">
-                <span>{sectionCopy.proof}</span>
-                <ul>
-                  {activeSection.proofPoints.map((proofPoint) => (
-                    <li key={proofPoint}>{proofPoint}</li>
-                  ))}
-                </ul>
+              <div className="section-panel__title-block">
+                <p className="section-panel__eyebrow">{activeSection.eyebrow}</p>
+                <h1>{activeSection.title}</h1>
               </div>
-            )}
-            {activeSection.cta?.href && (
-              <a className="section-panel__cta" href={activeSection.cta.href} rel="noreferrer" target="_blank">
-                {activeSection.cta.label}
-              </a>
-            )}
-            <button type="button" onClick={() => setActiveSectionId(null)}>
-              {sectionCopy.back}
-            </button>
+              <div className="section-panel__summary-block">
+                <p className="section-panel__section-label">{activeSection.label}</p>
+                <p className="section-panel__summary">{activeSection.summary}</p>
+              </div>
+            </div>
+
+            <div className="section-panel__body">
+              <div className="section-panel__rail" aria-hidden="true" />
+              <div className="section-panel__narrative">
+                {activeSection.intro && <p className="section-panel__intro">{activeSection.intro}</p>}
+                {activeSection.highlights && activeSection.highlights.length > 0 && (
+                  <section className="section-panel__chapter" aria-label="Highlights">
+                    <h2>{sectionCopy.highlights}</h2>
+                    <div className="section-panel__content-grid">
+                      {activeSection.highlights.map((highlight, index) => (
+                        <article className="section-panel__highlight" key={highlight}>
+                          <span>{String(index + 1).padStart(2, '0')}</span>
+                          <p>{highlight}</p>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                )}
+                {activeSection.proofPoints && activeSection.proofPoints.length > 0 && (
+                  <section className="section-panel__proof" aria-label="Proof points">
+                    <h2>{sectionCopy.proof}</h2>
+                    <ul>
+                      {activeSection.proofPoints.map((proofPoint) => (
+                        <li key={proofPoint}>{proofPoint}</li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+                <div className="section-panel__actions">
+                  {activeSection.cta?.href && (
+                    <a className="section-panel__cta" href={activeSection.cta.href} rel="noreferrer" target="_blank">
+                      {activeSection.cta.label}
+                    </a>
+                  )}
+                  <button type="button" onClick={() => setActiveSectionId(null)}>
+                    {sectionCopy.back}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </section>
