@@ -123,9 +123,11 @@
 
 .floating-cube-nav__item {
   position: absolute;
-  display: grid;
-  place-items: center;
-  width: 6.4rem;
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  justify-content: flex-start;
+  width: 13rem;
   height: 6.4rem;
   padding: 0;
   border: 0;
@@ -134,6 +136,31 @@
   cursor: pointer;
   pointer-events: auto;
   perspective: 760px;
+  text-align: left;
+}
+
+.floating-cube-nav__item--1 {
+  --menu-accent: 154, 203, 242;
+}
+
+.floating-cube-nav__item--2 {
+  --menu-accent: 194, 138, 90;
+}
+
+.floating-cube-nav__item--3 {
+  --menu-accent: 185, 199, 214;
+}
+
+.floating-cube-nav__item--4 {
+  --menu-accent: 137, 214, 199;
+}
+
+.floating-cube-nav__item--5 {
+  --menu-accent: 185, 167, 255;
+}
+
+.floating-cube-nav__item--6 {
+  --menu-accent: 240, 210, 180;
 }
 
 .floating-cube-nav__item--1 {
@@ -144,6 +171,7 @@
 .floating-cube-nav__item--2 {
   top: 11%;
   right: 21%;
+  justify-content: flex-end;
 }
 
 .floating-cube-nav__item--3 {
@@ -154,6 +182,7 @@
 .floating-cube-nav__item--4 {
   top: 46%;
   right: 12%;
+  justify-content: flex-end;
 }
 
 .floating-cube-nav__item--5 {
@@ -164,15 +193,63 @@
 .floating-cube-nav__item--6 {
   right: 25%;
   bottom: 10%;
+  justify-content: flex-end;
+}
+
+.floating-cube-nav__item--2 .floating-cube-nav__label,
+.floating-cube-nav__item--4 .floating-cube-nav__label,
+.floating-cube-nav__item--6 .floating-cube-nav__label {
+  order: -1;
+  align-items: flex-end;
+  text-align: right;
 }
 
 .menu-cube {
   display: block;
-  width: 4.9rem;
-  height: 4.9rem;
+  position: relative;
+  flex: 0 0 auto;
+  width: 4.7rem;
+  height: 4.7rem;
   filter: drop-shadow(0 22px 34px rgba(0, 0, 0, 0.36));
   animation: menu-cube-breathe 5.8s ease-in-out infinite;
   animation-delay: calc(var(--delay, 0) * -1s);
+}
+
+.floating-cube-nav__label {
+  display: grid;
+  gap: 0.24rem;
+  min-width: 5.8rem;
+  pointer-events: none;
+  transform: translateY(0.2rem);
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease,
+    color 220ms ease;
+}
+
+.floating-cube-nav__label small {
+  color: rgba(var(--menu-accent), 0.82);
+  font-size: 0.54rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.floating-cube-nav__label strong {
+  color: rgba(238, 247, 255, 0.78);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  line-height: 1.1;
+}
+
+.floating-cube-nav__item:hover .floating-cube-nav__label,
+.floating-cube-nav__item:focus-visible .floating-cube-nav__label {
+  transform: translateY(0);
+}
+
+.floating-cube-nav__item:hover .floating-cube-nav__label strong,
+.floating-cube-nav__item:focus-visible .floating-cube-nav__label strong {
+  color: rgba(247, 250, 253, 0.96);
 }
 
 .floating-cube-nav__item--1 .menu-cube {
@@ -231,10 +308,10 @@
 .menu-cube__face {
   display: grid;
   place-items: center;
-  border: 1px solid rgba(154, 203, 242, 0.22);
+  border: 1px solid rgba(var(--menu-accent), 0.22);
   background:
     radial-gradient(circle at 34% 24%, rgba(238, 247, 255, 0.11), transparent 36%),
-    linear-gradient(135deg, rgba(154, 203, 242, 0.12), transparent 46%),
+    linear-gradient(135deg, rgba(var(--menu-accent), 0.13), transparent 46%),
     rgba(4, 8, 14, 0.72);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
@@ -243,56 +320,44 @@
 }
 
 .menu-cube__face--front {
-  gap: 0.18rem;
-  align-content: center;
-  padding: 0.46rem;
-  transform: translateZ(2.45rem);
+  padding: 0.52rem;
+  transform: translateZ(2.35rem);
 }
 
 .menu-cube__face--back {
-  transform: rotateY(180deg) translateZ(2.45rem);
+  transform: rotateY(180deg) translateZ(2.35rem);
 }
 
 .menu-cube__face--right {
-  transform: rotateY(90deg) translateZ(2.45rem);
+  transform: rotateY(90deg) translateZ(2.35rem);
 }
 
 .menu-cube__face--left {
-  transform: rotateY(-90deg) translateZ(2.45rem);
+  transform: rotateY(-90deg) translateZ(2.35rem);
 }
 
 .menu-cube__face--top {
-  transform: rotateX(90deg) translateZ(2.45rem);
+  transform: rotateX(90deg) translateZ(2.35rem);
 }
 
 .menu-cube__face--bottom {
-  transform: rotateX(-90deg) translateZ(2.45rem);
+  transform: rotateX(-90deg) translateZ(2.35rem);
 }
 
-.menu-cube__face--front small {
-  color: rgba(194, 138, 90, 0.9);
-  font-size: 0.46rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-}
-
-.menu-cube__face--front strong {
-  max-width: 4.1rem;
-  color: rgba(247, 250, 253, 0.88);
-  font-size: 0.54rem;
-  font-weight: 900;
-  line-height: 1.1;
-  letter-spacing: 0.12em;
-  text-align: center;
+.menu-cube__glyph {
+  width: 3.1rem;
+  height: 3.1rem;
+  opacity: 0.86;
+  filter: drop-shadow(0 0 12px rgba(var(--menu-accent), 0.22));
 }
 
 .floating-cube-nav__item:hover .menu-cube__face,
 .floating-cube-nav__item:focus-visible .menu-cube__face {
-  border-color: rgba(154, 203, 242, 0.72);
+  border-color: rgba(var(--menu-accent), 0.72);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
     inset 0 -1px 0 rgba(0, 0, 0, 0.42),
-    0 0 18px rgba(154, 203, 242, 0.18);
+    0 0 18px rgba(var(--menu-accent), 0.2);
 }
 
 .floating-cube-nav__item:focus-visible {
@@ -1450,9 +1515,39 @@
   .floating-cube-nav__item--6 {
     position: relative;
     inset: auto;
-    flex: 0 0 4.8rem;
-    width: 4.8rem;
-    height: 4.8rem;
+    flex: 0 0 5.6rem;
+    width: 5.6rem;
+    height: 5.9rem;
+    justify-content: center;
+  }
+
+  .floating-cube-nav__label {
+    position: absolute;
+    right: 0;
+    bottom: -0.1rem;
+    left: 0;
+    justify-items: center;
+    min-width: 0;
+    gap: 0.08rem;
+    text-align: center;
+    transform: none;
+  }
+
+  .floating-cube-nav__item--2 .floating-cube-nav__label,
+  .floating-cube-nav__item--4 .floating-cube-nav__label,
+  .floating-cube-nav__item--6 .floating-cube-nav__label {
+    order: 0;
+    align-items: center;
+    text-align: center;
+  }
+
+  .floating-cube-nav__label small {
+    font-size: 0.36rem;
+  }
+
+  .floating-cube-nav__label strong {
+    font-size: 0.4rem;
+    letter-spacing: 0.08em;
   }
 
   .menu-cube {
@@ -1484,14 +1579,9 @@
     transform: rotateX(-90deg) translateZ(1.85rem);
   }
 
-  .menu-cube__face--front small {
-    font-size: 0.38rem;
-  }
-
-  .menu-cube__face--front strong {
-    max-width: 3.1rem;
-    font-size: 0.42rem;
-    letter-spacing: 0.08em;
+  .menu-cube__glyph {
+    width: 2.35rem;
+    height: 2.35rem;
   }
 
   .section-panel {

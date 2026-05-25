@@ -406,18 +406,21 @@ export function PremiumCubePrototype() {
           >
             <span className="menu-cube" aria-hidden="true">
               <span className="menu-cube__stage">
-                <span className="menu-cube__body">
-                  <span className="menu-cube__face menu-cube__face--front">
-                    <small>{String(index + 1).padStart(2, '0')}</small>
-                    <strong>{section.label}</strong>
-                  </span>
-                  <span className="menu-cube__face menu-cube__face--back" />
-                  <span className="menu-cube__face menu-cube__face--right" />
+                  <span className="menu-cube__body">
+                    <span className="menu-cube__face menu-cube__face--front">
+                      <SectionGlyph className="menu-cube__glyph" sectionId={section.id} />
+                    </span>
+                    <span className="menu-cube__face menu-cube__face--back" />
+                    <span className="menu-cube__face menu-cube__face--right" />
                   <span className="menu-cube__face menu-cube__face--left" />
                   <span className="menu-cube__face menu-cube__face--top" />
                   <span className="menu-cube__face menu-cube__face--bottom" />
                 </span>
               </span>
+            </span>
+            <span className="floating-cube-nav__label">
+              <small>{String(index + 1).padStart(2, '0')}</small>
+              <strong>{section.label}</strong>
             </span>
           </button>
         ))}
