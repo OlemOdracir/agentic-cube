@@ -289,7 +289,12 @@ export function PremiumCubePrototype() {
   }, [activeSectionId])
 
   function enterFromFloatingMenu(sectionId: CubeSectionId) {
-    if (enteringSectionId || activeSection) {
+    if (enteringSectionId) {
+      return
+    }
+
+    if (activeSection) {
+      setActiveSectionId(sectionId)
       return
     }
 
@@ -399,9 +404,10 @@ export function PremiumCubePrototype() {
             aria-label={`${sectionCopy.faces} ${String(index + 1).padStart(2, '0')} ${section.label}`}
             className={`floating-cube-nav__item floating-cube-nav__item--${index + 1} ${
               enteringSectionId === section.id ? 'is-entering' : ''
-            }`}
+            } ${activeSection?.id === section.id ? 'is-active' : ''}`}
             key={section.id}
             type="button"
+            aria-current={activeSection?.id === section.id ? 'page' : undefined}
             onClick={() => enterFromFloatingMenu(section.id)}
           >
             <span className="menu-cube" aria-hidden="true">
@@ -449,24 +455,6 @@ export function PremiumCubePrototype() {
         {activeSection && (
           <div className="section-panel__inner">
             <span className="section-panel__aperture" aria-hidden="true" />
-            <nav className="section-panel__face-nav" aria-label={sectionCopy.faces}>
-              <span>{sectionCopy.faces}</span>
-              <div>
-                {sections.map((section, index) => (
-                  <button
-                    aria-current={section.id === activeSection.id ? 'page' : undefined}
-                    className={section.id === activeSection.id ? 'is-active' : ''}
-                    key={section.id}
-                    type="button"
-                    onClick={() => setActiveSectionId(section.id)}
-                  >
-                    <SectionGlyph className="face-nav__glyph" sectionId={section.id} />
-                    <strong>{String(index + 1).padStart(2, '0')}</strong>
-                    {section.label}
-                  </button>
-                ))}
-              </div>
-            </nav>
 
             <div className="section-panel__masthead">
               <div className="section-panel__index" aria-hidden="true">
