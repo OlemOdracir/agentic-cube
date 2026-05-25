@@ -203,6 +203,7 @@ function FaceArtifact({ copy, section }: FaceArtifactProps) {
 export function PremiumCubePrototype() {
   const [cursorMode, setCursorMode] = useState<'default' | 'grab' | 'grabbing'>('default')
   const [activeSectionId, setActiveSectionId] = useState<CubeSectionId | null>(null)
+  const [enteringSectionId, setEnteringSectionId] = useState<CubeSectionId | null>(null)
   const sectionPanelRef = useRef<HTMLElement | null>(null)
   const { content, locale, sections, setLocale } = useSiteContent()
   const [effects] = useState(() => readDiagnosticFx())
@@ -286,6 +287,18 @@ export function PremiumCubePrototype() {
   useEffect(() => {
     sectionPanelRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
   }, [activeSectionId])
+
+  function enterFromFloatingMenu(sectionId: CubeSectionId) {
+    if (enteringSectionId || activeSection) {
+      return
+    }
+
+    setEnteringSectionId(sectionId)
+    window.setTimeout(() => {
+      setActiveSectionId(sectionId)
+      setEnteringSectionId(null)
+    }, 620)
+  }
 
   useEffect(() => {
     const panel = sectionPanelRef.current
@@ -379,6 +392,36 @@ export function PremiumCubePrototype() {
         <div className="prototype-mark">{content.identity.handle}</div>
         <div className="prototype-status">{content.identity.fullName}</div>
       </div>
+
+      <nav className="floating-cube-nav" aria-label={sectionCopy.faces}>
+        {sections.map((section, index) => (
+          <button
+            aria-label={`${sectionCopy.faces} ${String(index + 1).padStart(2, '0')} ${section.label}`}
+            className={`floating-cube-nav__item floating-cube-nav__item--${index + 1} ${
+              enteringSectionId === section.id ? 'is-entering' : ''
+            }`}
+            key={section.id}
+            type="button"
+            onClick={() => enterFromFloatingMenu(section.id)}
+          >
+            <span className="menu-cube" aria-hidden="true">
+              <span className="menu-cube__stage">
+                <span className="menu-cube__body">
+                  <span className="menu-cube__face menu-cube__face--front">
+                    <small>{String(index + 1).padStart(2, '0')}</small>
+                    <strong>{section.label}</strong>
+                  </span>
+                  <span className="menu-cube__face menu-cube__face--back" />
+                  <span className="menu-cube__face menu-cube__face--right" />
+                  <span className="menu-cube__face menu-cube__face--left" />
+                  <span className="menu-cube__face menu-cube__face--top" />
+                  <span className="menu-cube__face menu-cube__face--bottom" />
+                </span>
+              </span>
+            </span>
+          </button>
+        ))}
+      </nav>
 
       <div className="language-toggle" aria-label="Language">
         <button
