@@ -39,7 +39,7 @@ const POINTS_VERTEX = /* glsl */ `
     vHeight = position.z;
     float crestBoost = smoothstep(-0.2, 0.85, vHeight);
     gl_Position = projectionMatrix * mvPosition;
-    gl_PointSize = (150.0 / vDepth) * uPixelRatio * (0.6 + crestBoost * 0.9);
+    gl_PointSize = (30.0 / vDepth) * uPixelRatio * (0.6 + crestBoost * 0.9);
   }
 `
 
