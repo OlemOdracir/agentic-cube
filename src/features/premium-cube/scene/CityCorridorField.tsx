@@ -40,6 +40,14 @@ const ROAD_HALF_WIDTH_NEAR = 2.45
 const SIDEWALK_BANDS = 3
 const LAMP_CURB_OFFSET = 0.22
 
+// Signal appearance
+const SIGNAL_COLOR = '#d0c4ff'
+const SIGNAL_SIZE_FACTOR = POINT_SIZE_FACTOR * 3.2
+
+// Lamp glow appearance
+const LAMP_GLOW_COLOR = '#b09aff'
+const LAMP_GLOW_SIZE_FACTOR = POINT_SIZE_FACTOR * 7.5
+
 type CityNode =
   | {
       kind: 'road'
@@ -139,6 +147,27 @@ function createDotTexture() {
   return texture
 }
 
+function createGlowTexture() {
+  const s = 128
+  const canvas = document.createElement('canvas')
+  canvas.width = s
+  canvas.height = s
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return null
+  const gradient = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2)
+  gradient.addColorStop(0, 'rgba(255,255,255,0.92)')
+  gradient.addColorStop(0.12, 'rgba(230,218,255,0.48)')
+  gradient.addColorStop(0.4, 'rgba(160,130,255,0.13)')
+  gradient.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, s, s)
+  const texture = new CanvasTexture(canvas)
+  texture.colorSpace = SRGBColorSpace
+  texture.magFilter = LinearFilter
+  texture.minFilter = LinearFilter
+  return texture
+}
+
 function CameraLookAt() {
   const target = useMemo(() => new Vector3(0, 0.04, -8.5), [])
   useFrame(({ camera }) => {
@@ -152,6 +181,8 @@ function buildCityGraph() {
   const pairs: LinePair[] = []
   const roadIndex: number[][] = []
   const sidewalkIndex: Record<-1 | 1, number[][]> = { '-1': [], 1: [] }
+  const signalIndices: number[] = []
+  const lampHeadIndices: number[] = []
 
   for (let row = 0; row < ROAD_ROWS; row += 1) {
     roadIndex[row] = []
@@ -407,6 +438,8 @@ function buildCityGraph() {
       const baseRight =
         nodes.push({ kind: 'lamp', baseZ, side, localX: xOffset + 0.08, localY: -1.02, localZ: 0.08 }) - 1
 
+      lampHeadIndices.push(lampHead)
+
       pairs.push({ a: poleBase, b: poleMid, strength: 0.86 })
       pairs.push({ a: poleMid, b: poleTop, strength: 0.86 })
       pairs.push({ a: poleTop, b: armEnd, strength: 0.76 })
@@ -437,11 +470,14 @@ function buildCityGraph() {
 
   for (let i = 0; i < SIGNAL_COUNT; i += 1) {
     const laneX = [-0.74, -0.38, 0.38, 0.74][i % 4]
-    nodes.push({ kind: 'signal', index: i, laneX, speed: 1.35 + (i % 4) * 0.16 })
+    const idx = nodes.push({ kind: 'signal', index: i, laneX, speed: 1.35 + (i % 4) * 0.16 }) - 1
+    signalIndices.push(idx)
   }
 
-  return { nodes, pairs }
+  return { nodes, pairs, signalIndices, lampHeadIndices }
 }
+
+// ── Shaders ───────────────────────────────────────────────────────────────────
 
 const POINTS_VERTEX = /* glsl */ `
   uniform float uPixelRatio;
@@ -475,20 +511,94 @@ const POINTS_FRAGMENT = /* glsl */ `
   }
 `
 
+const SIGNAL_VERTEX = /* glsl */ `
+  uniform float uPixelRatio;
+  uniform float uPointSizeFactor;
+  uniform float uTime;
+  varying float vDepth;
+  varying float vPulse;
+  void main() {
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    vDepth = -mvPosition.z;
+    // Use x + z as a per-signal phase so each signal pulses independently
+    vPulse = 0.5 + 0.5 * sin(uTime * 2.6 + position.x * 6.8 + position.z * 1.4);
+    gl_Position = projectionMatrix * mvPosition;
+    gl_PointSize = (uPointSizeFactor / vDepth) * uPixelRatio * (1.2 + vPulse * 1.1);
+  }
+`
+
+const SIGNAL_FRAGMENT = /* glsl */ `
+  uniform vec3 uColor;
+  uniform sampler2D uMap;
+  uniform float uDepthNear;
+  uniform float uDepthFar;
+  varying float vDepth;
+  varying float vPulse;
+  void main() {
+    vec4 sprite = texture2D(uMap, gl_PointCoord);
+    float depthFade = mix(1.0, 0.04, smoothstep(uDepthNear, uDepthFar, vDepth));
+    float alpha = sprite.a * (0.52 + vPulse * 0.58) * depthFade;
+    gl_FragColor = vec4(uColor * (0.82 + vPulse * 0.38), alpha);
+  }
+`
+
+const GLOW_VERTEX = /* glsl */ `
+  uniform float uPixelRatio;
+  uniform float uPointSizeFactor;
+  varying float vDepth;
+  void main() {
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    vDepth = -mvPosition.z;
+    gl_Position = projectionMatrix * mvPosition;
+    gl_PointSize = (uPointSizeFactor / vDepth) * uPixelRatio;
+  }
+`
+
+const GLOW_FRAGMENT = /* glsl */ `
+  uniform vec3 uColor;
+  uniform sampler2D uMap;
+  uniform float uDepthNear;
+  uniform float uDepthFar;
+  varying float vDepth;
+  void main() {
+    vec4 sprite = texture2D(uMap, gl_PointCoord);
+    float depthFade = mix(1.0, 0.02, smoothstep(uDepthNear, uDepthFar, vDepth));
+    float alpha = sprite.a * 0.26 * depthFade;
+    gl_FragColor = vec4(uColor, alpha);
+  }
+`
+
 export function CityCorridorField() {
   const graph = useMemo(() => buildCityGraph(), [])
+
   const pointGeometry = useMemo(() => {
     const geometry = new BufferGeometry()
     geometry.setAttribute('position', new BufferAttribute(new Float32Array(graph.nodes.length * 3), 3))
     return geometry
   }, [graph.nodes.length])
+
   const lineGeometry = useMemo(() => {
     const geometry = new BufferGeometry()
     geometry.setAttribute('position', new BufferAttribute(new Float32Array(graph.pairs.length * 2 * 3), 3))
     geometry.setAttribute('color', new BufferAttribute(new Float32Array(graph.pairs.length * 2 * 3), 3))
     return geometry
   }, [graph.pairs.length])
+
+  const signalGeometry = useMemo(() => {
+    const geometry = new BufferGeometry()
+    geometry.setAttribute('position', new BufferAttribute(new Float32Array(graph.signalIndices.length * 3), 3))
+    return geometry
+  }, [graph.signalIndices.length])
+
+  const glowGeometry = useMemo(() => {
+    const geometry = new BufferGeometry()
+    geometry.setAttribute('position', new BufferAttribute(new Float32Array(graph.lampHeadIndices.length * 3), 3))
+    return geometry
+  }, [graph.lampHeadIndices.length])
+
   const dotTexture = useMemo(() => createDotTexture(), [])
+  const glowTexture = useMemo(() => createGlowTexture(), [])
+
   const pointMaterial = useMemo(
     () =>
       new ShaderMaterial({
@@ -510,6 +620,48 @@ export function CityCorridorField() {
       }),
     [dotTexture],
   )
+
+  const signalMaterial = useMemo(
+    () =>
+      new ShaderMaterial({
+        vertexShader: SIGNAL_VERTEX,
+        fragmentShader: SIGNAL_FRAGMENT,
+        transparent: true,
+        depthWrite: false,
+        blending: AdditiveBlending,
+        uniforms: {
+          uColor: { value: new Color(SIGNAL_COLOR) },
+          uMap: { value: dotTexture },
+          uPixelRatio: { value: Math.min(window.devicePixelRatio ?? 1, 2) },
+          uPointSizeFactor: { value: SIGNAL_SIZE_FACTOR },
+          uDepthNear: { value: DEPTH_FADE_NEAR },
+          uDepthFar: { value: DEPTH_FADE_FAR + 8 },
+          uTime: { value: 0 },
+        },
+      }),
+    [dotTexture],
+  )
+
+  const glowMaterial = useMemo(
+    () =>
+      new ShaderMaterial({
+        vertexShader: GLOW_VERTEX,
+        fragmentShader: GLOW_FRAGMENT,
+        transparent: true,
+        depthWrite: false,
+        blending: AdditiveBlending,
+        uniforms: {
+          uColor: { value: new Color(LAMP_GLOW_COLOR) },
+          uMap: { value: glowTexture },
+          uPixelRatio: { value: Math.min(window.devicePixelRatio ?? 1, 2) },
+          uPointSizeFactor: { value: LAMP_GLOW_SIZE_FACTOR },
+          uDepthNear: { value: DEPTH_FADE_NEAR },
+          uDepthFar: { value: DEPTH_FADE_FAR + 8 },
+        },
+      }),
+    [glowTexture],
+  )
+
   const lineMaterial = useMemo(
     () =>
       new LineBasicMaterial({
@@ -521,16 +673,24 @@ export function CityCorridorField() {
       }),
     [],
   )
+
   const pointsRef = useRef<Points>(null)
   const linesRef = useRef<LineSegments>(null)
+  const signalRef = useRef<Points>(null)
+  const glowRef = useRef<Points>(null)
   const nodePositions = useMemo(() => new Float32Array(graph.nodes.length * 3), [graph.nodes.length])
 
   useFrame(({ clock }) => {
     const points = pointsRef.current
     const lines = linesRef.current
-    if (!points || !lines) return
+    const signalPoints = signalRef.current
+    const glowPoints = glowRef.current
+    if (!points || !lines || !signalPoints || !glowPoints) return
 
     const t = clock.getElapsedTime()
+    const signalMat = signalPoints.material as ShaderMaterial
+    signalMat.uniforms.uTime.value = t
+
     graph.nodes.forEach((node, index) => {
       const base = index * 3
       if (node.kind === 'road') {
@@ -598,6 +758,28 @@ export function CityCorridorField() {
     ;(pointPositions.array as Float32Array).set(nodePositions)
     pointPositions.needsUpdate = true
 
+    // Copy signal node positions into dedicated signal geometry
+    const signalPositionAttr = signalPoints.geometry.attributes.position as BufferAttribute
+    const signalArr = signalPositionAttr.array as Float32Array
+    for (let s = 0; s < graph.signalIndices.length; s += 1) {
+      const srcBase = graph.signalIndices[s] * 3
+      signalArr[s * 3] = nodePositions[srcBase]
+      signalArr[s * 3 + 1] = nodePositions[srcBase + 1]
+      signalArr[s * 3 + 2] = nodePositions[srcBase + 2]
+    }
+    signalPositionAttr.needsUpdate = true
+
+    // Copy lamp head positions into glow geometry
+    const glowPositionAttr = glowPoints.geometry.attributes.position as BufferAttribute
+    const glowArr = glowPositionAttr.array as Float32Array
+    for (let g = 0; g < graph.lampHeadIndices.length; g += 1) {
+      const srcBase = graph.lampHeadIndices[g] * 3
+      glowArr[g * 3] = nodePositions[srcBase]
+      glowArr[g * 3 + 1] = nodePositions[srcBase + 1]
+      glowArr[g * 3 + 2] = nodePositions[srcBase + 2]
+    }
+    glowPositionAttr.needsUpdate = true
+
     const linePositions = lines.geometry.attributes.position as BufferAttribute
     const lineColors = lines.geometry.attributes.color as BufferAttribute
     const linePositionArray = linePositions.array as Float32Array
@@ -644,6 +826,8 @@ export function CityCorridorField() {
       <CameraLookAt />
       <points ref={pointsRef} geometry={pointGeometry} material={pointMaterial} />
       <lineSegments ref={linesRef} geometry={lineGeometry} material={lineMaterial} />
+      <points ref={signalRef} geometry={signalGeometry} material={signalMaterial} />
+      <points ref={glowRef} geometry={glowGeometry} material={glowMaterial} />
     </>
   )
 }
