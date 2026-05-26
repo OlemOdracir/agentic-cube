@@ -14,8 +14,8 @@ import {
 import type { Group, LineSegments, Points } from 'three'
 
 // Ajustables ----------------------------------------------------
-const PARTICLE_COLS = 60
-const PARTICLE_ROWS = 36
+const PARTICLE_COLS = 85
+const PARTICLE_ROWS = 51
 const PARTICLE_COUNT = PARTICLE_COLS * PARTICLE_ROWS
 const FIELD_WIDTH = 32
 const FIELD_DEPTH = 28
@@ -23,7 +23,7 @@ const JITTER_RATIO = 0.32 // 0..1 fraction of cell size
 const WAVE_TIME_SCALE = 0.45
 const LINE_DISTANCE_RATIO = 1.85 // multiplied by avg cell size
 const NEIGHBOR_RADIUS_CELLS = 2 // grid cells to scan per particle
-const MAX_LINE_SEGMENTS = 16000
+const MAX_LINE_SEGMENTS = 32000
 const PARTICLE_COLOR = '#9d7bff'
 const LINE_COLOR_RGB: [number, number, number] = [0x74 / 255, 0x45 / 255, 0xff / 255]
 const HORIZON_GLOW_COLOR = '#7956ff'
