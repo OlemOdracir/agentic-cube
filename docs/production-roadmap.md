@@ -4,23 +4,27 @@
 
 Status: in progress.
 
-- Premium cube portal.
-- Obsidian visual direction.
+- Premium cube as persistent focal element (not a one-shot portal).
+- Obsidian visual direction with violet volumetric ambient.
 - Procedural glass audio.
-- Face-to-page transition.
+- Single-screen side-panel layout (cube center, narrative left, process right, breadcrumb bottom).
+- Animated "wave-field" particle/wireframe background (purple, drifts like a calm sea).
 - Environment reflection experiments.
 - Agent rules and content strategy.
 
 ## Phase 1: Static Public MVP
 
-Goal: publish a polished, indexable, bilingual site without backend complexity.
+Goal: publish a polished, indexable, bilingual single-screen experience without backend complexity.
 
 - Tailwind configured with project tokens.
 - Structured content loader.
 - Example public content.
 - Private deploy content ignored by Git.
-- Six static pages from cube faces.
-- SEO metadata and JSON-LD.
+- Single-screen side-panel layout implemented and responsive.
+- Minimal poster-style content for all six faces (fits one viewport on desktop).
+- Wave-field animated background integrated into the obsidian scene.
+- One or more deep-dive routes (methodology / project archive) reached from side-panel CTAs.
+- SEO metadata and JSON-LD on the home composition and on each deep-dive route.
 - README and license.
 - Static deploy.
 

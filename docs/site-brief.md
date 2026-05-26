@@ -86,14 +86,27 @@ Long form:
 - Not a place to expose private client details.
 - Not a content dump of all philosophical work.
 
+## Experience Shape
+
+The site is a **single-screen experience**:
+
+- The obsidian cube is the persistent center of the layout.
+- Selecting a face reveals that face's minimal content on the surrounding side panels in place; the cube never disappears.
+- Each face's content is poster-sized: a short narrative on the left, a numbered process/metric on the right, breadcrumb on the bottom.
+- Responsive: side panels collapse around the cube on narrow viewports.
+
+Deeper artifacts (full methodology essays, project archives, the full research index) live on separate routes reached from the side-panel CTAs and may scroll.
+
 ## MVP Definition
 
 The MVP is complete when:
 
-- The cube acts as a premium portal.
-- Each face opens into a static, readable, bilingual page.
-- Content is loaded from a structured content system.
+- The cube is the persistent focal element of the home experience.
+- Each face reveals minimal content on the surrounding side panels in a single viewport (no overlay routing, no scroll on desktop).
+- The same composition adapts gracefully to narrow viewports.
+- Content is loaded from a structured content system (bilingual).
 - Public repo contains example content only.
 - Personal content can be supplied privately.
+- A short methodology / deep-dive page exists for at least one face (reached from its side-panel CTA).
 - README explains the agentic process and architecture.
 - Build and lint pass.

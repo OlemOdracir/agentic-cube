@@ -26,38 +26,68 @@ The design should read as premium because it is precise, not because it is decor
 
 ## Cube Rules
 
-- The cube is the portal.
-- The page is the destination.
-- Once a face is entered, the cube must disappear and content becomes normal static HTML.
-- The cube should not remain as a decorative background behind content.
+- The cube is the **persistent focal element** of the entire experience, always visible at screen center on desktop.
+- The cube is not a one-shot portal. Selecting a face updates the surrounding side panels in place; the cube does not disappear, navigate, or fade out.
+- The cube rotates on drag and snaps to the selected face on click. Audio cues stay subtle and gesture-driven.
+- All six faces share the same visual grammar: inset bevel, corner brackets, central diamond glyph, section label, "OBSIDIAN CUBE" subtitle, three accent dots. No per-face glyph divergence.
+- Material direction: deep obsidian (`#010208`), high metalness (≈0.92), low-to-mid roughness (≈0.13), strong clearcoat. Edges should catch a clean top rim highlight; the underside should bathe in violet underglow.
 - Avoid postprocessing that creates instability.
 - `Bloom` is prohibited for production because it caused visible flicker.
 
 ## Background
 
-Default:
+Default field (always present):
 
-- Charcoal/black background.
-- Minimal grid/noise only if extremely subtle.
-- The cube remains the focal point.
+- Deep obsidian field (`#02040a` to `#03050b`) with a subtle dotted grid (faint blue-violet intersections, low alpha).
+- A vertical light beam descends onto the cube from above as ambient continuity.
+- A wide, soft violet volumetric glow surrounds the cube and platform — this is the signature ambient. It should read as nebula/aurora, never as a generic SaaS purple gradient.
+- The platform under the cube has concentric rings with chronometer-style tick marks and a small bright center point.
 
-Environment reflection:
+### Wave-Field Background (Target)
+
+Behind the cube and behind the platform, the scene includes a **violet "wave-field"**: a low-poly point-and-line mesh that occupies the lower half of the background and behaves like a calm sea.
+
+- Visual reference: a perspective grid of small violet dots (`~#b8aeff`) connected by thin segments (`~#7a6dff`, low alpha), receding toward the horizon. Brighter, denser nodes near the camera; fainter, sparser nodes far away.
+- Motion: a slow, continuous wave displacement on the Z (height) axis — combine two or three sine waves of different wavelengths and phases so the surface never visually repeats. Amplitude must stay small enough that the cube reads as the focal element, not the waves.
+- Tempo: think tide, not ocean storm. Period in the order of 4-8 seconds per major undulation, with finer ripples superimposed.
+- Color discipline: violet/indigo only. Do not let the wave-field shift toward generic neon cyan or magenta. It is the same family as the ambient glow.
+- Density: roughly poster-quality — visible structure but never crowded. Fade to black at the horizon and at the screen edges so it never competes with side-panel content.
+- Performance: implement as a `BufferGeometry` driven by an animation loop or a shader; avoid per-frame allocations and avoid heavy postprocessing.
+
+### Environment reflection (for the cube)
 
 - Warmth should come from reflection, not from a busy background.
 - Avoid green tint dominating the cube.
+- The wave-field should contribute soft violet reflections on the cube's lower edges, reinforcing the underglow.
 - Prefer high-contrast light bands, pale sky, distant dark forms, and subtle gold/ice highlights.
 
-## Page Style
+## Layout: Single-Screen Side Panels
 
-Pages entered from the cube should be:
+The experience is a single-viewport composition. Selecting a face never navigates away.
 
-- Static and readable.
-- Editorial, not card-heavy.
-- Spacious but not empty.
-- Built for recruiters and AI parsers.
-- Semantic HTML first, visual enhancement second.
+Desktop composition (≈1440-1920px):
 
-Surface rules:
+- **Center**: the cube, occupying roughly 40-50% of the horizontal frame, vertically centered.
+- **Top-left**: identity block — display name and role (e.g. "Ricardo Melo / Ingeniero de Productos Agénticos").
+- **Top-right**: language toggle (EN / ES).
+- **Left rail**: the selected face's primary narrative — eyebrow (e.g. "Ingeniería de"), large two-line headline, a short paragraph, then a vertical list of 3-5 named features with a small glyph and one-sentence description each. End with a single primary action (e.g. "EXPLORAR ENFOQUE").
+- **Right rail**: the supporting structure for that face — a numbered flow or metric stack (e.g. "FLUJO AGÉNTICO 04" with steps `01 ESPECIFICAR`, `02 PROTOTIPAR`, `03 VALIDAR`, `04 PUBLICAR`), each with a brief one-line description. End with a secondary action (e.g. "VER METODOLOGÍA →").
+- **Bottom strip**: section breadcrumb (e.g. `DISEÑO INTELIGENTE • SISTEMAS AUTÓNOMOS • IMPACTO REAL`) on the left and the full searchable name on the right.
+
+Hard constraints:
+
+- The entire composition must fit in a single viewport at standard desktop widths without scrolling. Treat each face as a poster, not a page.
+- Side panel content per face is minimal: short paragraph, list of named items, one or two CTAs. No long-form essays inside the cube experience.
+- Switching faces is a soft cross-fade of the side-panel content; the cube animates in place.
+
+Responsive collapse (≤900px):
+
+- Cube remains the visual anchor, scaled down.
+- Left and right rails stack below the cube as accordions or a vertical scroll list.
+- Bottom breadcrumb may collapse to a horizontal scroller.
+- Maintain the no-scroll-on-desktop rule only for desktop; mobile may scroll, but the first fold must include the cube and the face's headline.
+
+Surface rules (for side-panel cards and pills):
 
 - Cards should feel like polished obsidian panels: dark, reflective, thin bordered, and responsive to the pointer.
 - Cards may use tiny corner marks, inner highlights, and cursor-following light.
@@ -65,12 +95,14 @@ Surface rules:
 - Do not use large rounded SaaS-style cards.
 - Repeated cards should share a common interaction model and visual grammar.
 
-Transition rules:
+## Deep-dive Pages (Secondary)
 
-- Clicking a face should feel like entering that face, not like opening a separate route.
-- Use a brief aperture/scan-light transition from cube to page.
-- Once the page is visible, the cube must be gone.
-- The page may preserve the selected face's glyph and accent color as continuity.
+Long-form content (the methodology behind a face, the actual project archive, the full research index) lives on separate routes reached via the side-panel CTAs ("VER METODOLOGÍA", "EXPLORAR ENFOQUE", etc.).
+
+- These pages may use the existing static obsidian page styling.
+- They are not part of the single-screen experience and may scroll.
+- They should still feel like the same system: same typography, same palette, same surface vocabulary.
+- The cube is not required to be present on these pages.
 
 ## Color Tokens
 
@@ -112,7 +144,7 @@ Working palette:
 
 ## Prohibited Visual Patterns
 
-- Generic purple gradients.
+- Generic purple gradients used as decoration (the violet ambient must read as volumetric/nebula light, not as a flat SaaS gradient).
 - Decorative orb/bokeh backgrounds.
 - Excessive cards.
 - Floating nested cards.
@@ -122,6 +154,8 @@ Working palette:
 - Stock-like imagery that does not reveal useful meaning.
 - Gold ornament used as luxury decoration without structural purpose.
 - Icon styles that do not match the cube glyph geometry.
+- Per-face cube glyph divergence: all six faces share the same diamond glyph and surface grammar; only the section label changes.
+- Full-page section overlays that hide the cube (the cube must remain visible in the primary experience).
 
 ## Tailwind Policy
 

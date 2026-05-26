@@ -22,12 +22,15 @@ These rules guide future AI-assisted development sessions.
 ## Design Rules
 
 - Follow the Obsidian Interface System.
-- The cube is a portal; content pages are normal static pages.
+- The cube is the **persistent focal element** at screen center; selecting a face updates side panels in place, the cube does not disappear.
+- Each face's primary content must fit a single viewport on desktop with no scroll, and must collapse responsively on narrow viewports.
+- Long-form deep-dive pages (methodology, project archive, research index) live on separate routes reached from side-panel CTAs.
 - Do not use `Bloom` in production.
 - Do not add auto-playing sound.
-- Do not add permanent motion without purpose.
-- Verify desktop and mobile after meaningful visual changes.
+- Permanent motion is allowed only when it reinforces the obsidian-ambient identity (e.g. the violet wave-field background); never as random decoration.
+- Verify desktop and mobile after meaningful visual changes (use Playwright when available).
 - Avoid design drift: no generic gradients, cards, or landing page templates.
+- All six cube faces share the same visual grammar (diamond glyph, inset bevel, corner brackets); only the section label changes.
 
 ## Engineering Rules
 
