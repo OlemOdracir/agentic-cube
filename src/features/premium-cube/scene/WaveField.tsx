@@ -253,12 +253,16 @@ export function WaveField({
               if (segIdx >= MAX_LINE_SEGMENTS) break outer
               const dist = Math.sqrt(d2)
               const fade = 1 - dist * invLineDistance
+              if (fade <= 0) continue
               const avgRow = (r + nr) * 0.5
               const horizonFade =
                 avgRow <= horizonStart ? 1 : Math.max(0, 1 - (avgRow - horizonStart) / horizonRange)
               const avgHeight = (zi + positions[j * 3 + 2]) * 0.5
               const crestBoost = Math.max(0, Math.min(1, (avgHeight + 0.2) / 1.05))
-              const intensity = (0.45 + fade * 0.55) * (0.35 + crestBoost * 0.85) * (0.25 + horizonFade * 0.95)
+              // Multiply by `fade` so intensity smoothly reaches 0 at the
+              // distance threshold — eliminates the in/out pop when waves
+              // push pairs across the cutoff.
+              const intensity = fade * (0.45 + fade * 0.55) * (0.35 + crestBoost * 0.85) * (0.25 + horizonFade * 0.95)
               const r0 = LINE_COLOR_RGB[0] * intensity
               const g0 = LINE_COLOR_RGB[1] * intensity
               const b0 = LINE_COLOR_RGB[2] * intensity
