@@ -12,48 +12,69 @@ import {
   SRGBColorSpace,
 } from 'three'
 import type { Group, LineSegments, Points } from 'three'
+import {
+  CREST_BOOST_HIGH,
+  CREST_BOOST_LOW,
+  DEPTH_FADE_FAR,
+  DEPTH_FADE_NEAR,
+  FIELD_DEPTH,
+  FIELD_WIDTH,
+  HORIZON_GLOW_COLOR,
+  HORIZON_GLOW_OPACITY,
+  JITTER_RATIO,
+  LINE_COLOR_RGB,
+  LINE_DISTANCE_RATIO,
+  LINE_GLOBAL_INTENSITY,
+  MAX_LINE_SEGMENTS,
+  NEIGHBOR_RADIUS_CELLS,
+  PARALLAX_X,
+  PARALLAX_Z,
+  PARTICLE_COLOR,
+  PARTICLE_COLS,
+  PARTICLE_ROWS,
+  POINT_ALPHA_BASE,
+  POINT_ALPHA_CREST,
+  POINT_SIZE_FACTOR,
+  WAVE_OCTAVES,
+  WAVE_TIME_SCALE,
+} from './waveFieldConfig'
 
-// Ajustables ----------------------------------------------------
-const PARTICLE_COLS = 85
-const PARTICLE_ROWS = 51
 const PARTICLE_COUNT = PARTICLE_COLS * PARTICLE_ROWS
-const FIELD_WIDTH = 32
-const FIELD_DEPTH = 28
-const JITTER_RATIO = 0.32 // 0..1 fraction of cell size
-const WAVE_TIME_SCALE = 0.45
-const LINE_DISTANCE_RATIO = 1.85 // multiplied by avg cell size
-const NEIGHBOR_RADIUS_CELLS = 2 // grid cells to scan per particle
-const MAX_LINE_SEGMENTS = 32000
-const PARTICLE_COLOR = '#9d7bff'
-const LINE_COLOR_RGB: [number, number, number] = [0x74 / 255, 0x45 / 255, 0xff / 255]
-const HORIZON_GLOW_COLOR = '#7956ff'
-// ---------------------------------------------------------------
 
 const POINTS_VERTEX = /* glsl */ `
   uniform float uPixelRatio;
+  uniform float uPointSizeFactor;
+  uniform float uCrestLow;
+  uniform float uCrestHigh;
   varying float vDepth;
   varying float vHeight;
   void main() {
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
     vDepth = -mvPosition.z;
     vHeight = position.z;
-    float crestBoost = smoothstep(-0.2, 0.85, vHeight);
+    float crestBoost = smoothstep(uCrestLow, uCrestHigh, vHeight);
     gl_Position = projectionMatrix * mvPosition;
-    gl_PointSize = (30.0 / vDepth) * uPixelRatio * (0.6 + crestBoost * 0.9);
+    gl_PointSize = (uPointSizeFactor / vDepth) * uPixelRatio * (0.6 + crestBoost * 0.9);
   }
 `
 
 const POINTS_FRAGMENT = /* glsl */ `
   uniform vec3 uColor;
   uniform sampler2D uMap;
+  uniform float uDepthNear;
+  uniform float uDepthFar;
+  uniform float uAlphaBase;
+  uniform float uAlphaCrest;
+  uniform float uCrestLow;
+  uniform float uCrestHigh;
   varying float vDepth;
   varying float vHeight;
   void main() {
     vec4 sprite = texture2D(uMap, gl_PointCoord);
-    float depthFade = mix(1.0, 0.05, smoothstep(4.0, 20.0, vDepth));
-    float crestBoost = smoothstep(-0.2, 0.85, vHeight);
+    float depthFade = mix(1.0, 0.05, smoothstep(uDepthNear, uDepthFar, vDepth));
+    float crestBoost = smoothstep(uCrestLow, uCrestHigh, vHeight);
     float colorBoost = 0.5 + crestBoost * 0.6;
-    float alpha = sprite.a * (0.32 + crestBoost * 0.42) * depthFade;
+    float alpha = sprite.a * (uAlphaBase + crestBoost * uAlphaCrest) * depthFade;
     vec3 rgb = uColor * colorBoost * (0.45 + 0.55 * depthFade);
     gl_FragColor = vec4(rgb, alpha);
   }
@@ -111,16 +132,13 @@ function makeSeededRandom(seed: number) {
 
 function waveDisplacement(x: number, y: number, t: number) {
   const tt = t * WAVE_TIME_SCALE
-  // Smaller amplitudes + higher frequencies than v1: more crests packed
-  // per unit area and no single octave large enough to span the field.
-  const w1 = Math.sin(x * 0.36 + tt * 0.6) * 0.16
-  const w2 = Math.sin(y * 0.44 + tt * 0.78 + 1.3) * 0.2
-  const cross = Math.sin(x * 0.7 + y * 0.55 + tt * 1.05 + 0.8) * 0.15
-  const chop =
-    Math.sin(x * 1.15 + tt * 1.45) * 0.09 + Math.sin(y * 1.32 + tt * 1.3 + 2.1) * 0.09
-  const fine = Math.sin((x - y) * 1.9 + tt * 1.85) * 0.06
-  const noise = Math.sin(x * 2.4 - y * 1.9 + tt * 2.2 + 0.4) * 0.05
-  return w1 + w2 + cross + chop + fine + noise
+  let z = 0
+  for (const [freqX, freqY, freqT, phase, amp] of WAVE_OCTAVES) {
+    // When freqY is negative it encodes a diagonal (x − y) wave
+    const spatial = freqY < 0 ? freqX * x + freqY * y : freqX * x + freqY * y
+    z += Math.sin(spatial + freqT * tt + phase) * amp
+  }
+  return z
 }
 
 type WaveFieldProps = {
@@ -187,9 +205,16 @@ export function WaveField({
         depthWrite: false,
         blending: AdditiveBlending,
         uniforms: {
-          uColor: { value: new Color(PARTICLE_COLOR) },
-          uMap: { value: dotTexture },
-          uPixelRatio: { value: Math.min(window.devicePixelRatio ?? 1, 2) },
+          uColor:           { value: new Color(PARTICLE_COLOR) },
+          uMap:             { value: dotTexture },
+          uPixelRatio:      { value: Math.min(window.devicePixelRatio ?? 1, 2) },
+          uPointSizeFactor: { value: POINT_SIZE_FACTOR },
+          uAlphaBase:       { value: POINT_ALPHA_BASE },
+          uAlphaCrest:      { value: POINT_ALPHA_CREST },
+          uDepthNear:       { value: DEPTH_FADE_NEAR },
+          uDepthFar:        { value: DEPTH_FADE_FAR },
+          uCrestLow:        { value: CREST_BOOST_LOW },
+          uCrestHigh:       { value: CREST_BOOST_HIGH },
         },
       }),
     [dotTexture],
@@ -261,14 +286,18 @@ export function WaveField({
               const horizonFade =
                 avgRow <= horizonStart ? 1 : Math.max(0, 1 - (avgRow - horizonStart) / horizonRange)
               const avgHeight = (zi + positions[j * 3 + 2]) * 0.5
-              const crestBoost = Math.max(0, Math.min(1, (avgHeight + 0.2) / 1.05))
-              // Multiply by `fade` so intensity smoothly reaches 0 at the
-              // distance threshold — eliminates the in/out pop when waves
-              // push pairs across the cutoff. Global factor 0.6 keeps the
-              // mesh in background territory instead of competing with the
-              // cube and panels.
+              const crestBoost = Math.max(
+                0,
+                Math.min(1, (avgHeight - CREST_BOOST_LOW) / (CREST_BOOST_HIGH - CREST_BOOST_LOW)),
+              )
+              // fade² ensures intensity → 0 at the distance threshold, eliminating the
+              // in/out pop when waves push pairs across the cutoff.
               const intensity =
-                0.6 * fade * (0.45 + fade * 0.55) * (0.35 + crestBoost * 0.85) * (0.25 + horizonFade * 0.95)
+                LINE_GLOBAL_INTENSITY *
+                fade *
+                (0.45 + fade * 0.55) *
+                (0.35 + crestBoost * 0.85) *
+                (0.25 + horizonFade * 0.95)
               const r0 = LINE_COLOR_RGB[0] * intensity
               const g0 = LINE_COLOR_RGB[1] * intensity
               const b0 = LINE_COLOR_RGB[2] * intensity
@@ -298,8 +327,8 @@ export function WaveField({
 
     const group = groupRef.current
     if (group) {
-      const parallaxX = pointer.x * 0.035
-      const parallaxY = pointer.y * 0.025
+      const parallaxX = pointer.x * PARALLAX_X
+      const parallaxY = pointer.y * PARALLAX_Z
       group.rotation.z = parallaxX
       group.position.x = position[0] + parallaxX * 0.6
       group.position.z = position[2] - parallaxY * 0.4
@@ -314,7 +343,7 @@ export function WaveField({
         <meshBasicMaterial
           map={horizonGlowTexture}
           transparent
-          opacity={0.2}
+          opacity={HORIZON_GLOW_OPACITY}
           depthWrite={false}
           blending={AdditiveBlending}
           toneMapped={false}
