@@ -52,8 +52,8 @@ const POINTS_FRAGMENT = /* glsl */ `
     vec4 sprite = texture2D(uMap, gl_PointCoord);
     float depthFade = mix(1.0, 0.05, smoothstep(4.0, 20.0, vDepth));
     float crestBoost = smoothstep(-0.2, 0.85, vHeight);
-    float colorBoost = 0.55 + crestBoost * 0.8;
-    float alpha = sprite.a * (0.5 + crestBoost * 0.55) * depthFade;
+    float colorBoost = 0.5 + crestBoost * 0.6;
+    float alpha = sprite.a * (0.32 + crestBoost * 0.42) * depthFade;
     vec3 rgb = uColor * colorBoost * (0.45 + 0.55 * depthFade);
     gl_FragColor = vec4(rgb, alpha);
   }
@@ -111,13 +111,16 @@ function makeSeededRandom(seed: number) {
 
 function waveDisplacement(x: number, y: number, t: number) {
   const tt = t * WAVE_TIME_SCALE
-  const swell =
-    Math.sin(x * 0.18 + tt * 0.7) * 0.42 +
-    Math.sin(y * 0.22 + tt * 0.85 + 1.3) * 0.52
-  const cross = Math.sin(x * 0.42 + y * 0.31 + tt * 1.1 + 0.8) * 0.22
-  const chop = Math.sin(x * 0.9 + tt * 1.4) * 0.12 + Math.sin(y * 1.05 + tt * 1.25 + 2.1) * 0.12
-  const fine = Math.sin((x + y) * 1.6 + tt * 1.8) * 0.06
-  return swell + cross + chop + fine
+  // Smaller amplitudes + higher frequencies than v1: more crests packed
+  // per unit area and no single octave large enough to span the field.
+  const w1 = Math.sin(x * 0.36 + tt * 0.6) * 0.16
+  const w2 = Math.sin(y * 0.44 + tt * 0.78 + 1.3) * 0.2
+  const cross = Math.sin(x * 0.7 + y * 0.55 + tt * 1.05 + 0.8) * 0.15
+  const chop =
+    Math.sin(x * 1.15 + tt * 1.45) * 0.09 + Math.sin(y * 1.32 + tt * 1.3 + 2.1) * 0.09
+  const fine = Math.sin((x - y) * 1.9 + tt * 1.85) * 0.06
+  const noise = Math.sin(x * 2.4 - y * 1.9 + tt * 2.2 + 0.4) * 0.05
+  return w1 + w2 + cross + chop + fine + noise
 }
 
 type WaveFieldProps = {
@@ -261,8 +264,11 @@ export function WaveField({
               const crestBoost = Math.max(0, Math.min(1, (avgHeight + 0.2) / 1.05))
               // Multiply by `fade` so intensity smoothly reaches 0 at the
               // distance threshold — eliminates the in/out pop when waves
-              // push pairs across the cutoff.
-              const intensity = fade * (0.45 + fade * 0.55) * (0.35 + crestBoost * 0.85) * (0.25 + horizonFade * 0.95)
+              // push pairs across the cutoff. Global factor 0.6 keeps the
+              // mesh in background territory instead of competing with the
+              // cube and panels.
+              const intensity =
+                0.6 * fade * (0.45 + fade * 0.55) * (0.35 + crestBoost * 0.85) * (0.25 + horizonFade * 0.95)
               const r0 = LINE_COLOR_RGB[0] * intensity
               const g0 = LINE_COLOR_RGB[1] * intensity
               const b0 = LINE_COLOR_RGB[2] * intensity
