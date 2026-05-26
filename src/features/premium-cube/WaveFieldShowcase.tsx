@@ -1,8 +1,11 @@
 import { Suspense, useEffect, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
+import { CityCorridorField } from './scene/CityCorridorField'
 import { WaveField } from './scene/WaveField'
 
 export function WaveFieldShowcase() {
+  const variant =
+    typeof window === 'undefined' ? 'wave' : new URLSearchParams(window.location.search).get('bg') === 'city' ? 'city' : 'wave'
   const [viewport, setViewport] = useState(() => ({
     width: typeof window === 'undefined' ? 0 : window.innerWidth,
     height: typeof window === 'undefined' ? 0 : window.innerHeight,
@@ -32,23 +35,31 @@ export function WaveFieldShowcase() {
         style={{ width: viewport.width || '100vw', height: viewport.height || '100vh' }}
       >
         <Canvas
-          camera={{ position: [0, 0.55, 4.6], fov: 48, near: 0.1, far: 80 }}
+          camera={{ position: variant === 'city' ? [0, 1.45, 7.6] : [0, 0.55, 4.6], fov: variant === 'city' ? 54 : 48, near: 0.1, far: 80 }}
           dpr={[1.5, 2]}
           gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
         >
           <Suspense fallback={null}>
             <color attach="background" args={['#08050d']} />
-            <fog attach="fog" args={['#08050d', 9, 28]} />
+            <fog attach="fog" args={['#08050d', variant === 'city' ? 12 : 9, variant === 'city' ? 36 : 28]} />
             <ambientLight intensity={0.18} />
-            <WaveField position={[0, -0.8, -1.4]} rotation={[-Math.PI / 2.3, 0, 0]} />
+            {variant === 'city' ? (
+              <CityCorridorField />
+            ) : (
+              <WaveField position={[0, -0.8, -1.4]} rotation={[-Math.PI / 2.3, 0, 0]} />
+            )}
           </Suspense>
         </Canvas>
       </div>
 
       <header className="wave-showcase__chrome">
         <div>
-          <span>WAVE-FIELD</span>
-          <small>?bg=only · plexus topography · particles + distance lines</small>
+          <span>{variant === 'city' ? 'CITY-CORRIDOR' : 'WAVE-FIELD'}</span>
+          <small>
+            {variant === 'city'
+              ? '?bg=city · vector street · moving signals'
+              : '?bg=only · plexus topography · particles + distance lines'}
+          </small>
         </div>
         <a href={typeof window !== 'undefined' ? window.location.pathname : '/'}>← back to cube</a>
       </header>
