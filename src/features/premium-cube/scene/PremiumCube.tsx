@@ -281,38 +281,6 @@ function ShineGlints({ animate }: ShineGlintsProps) {
   )
 }
 
-function ObsidianRimLights() {
-  const strips = useMemo(
-    () => [
-      { position: [0.24, 1.122, 1.118] as const, scale: [1.28, 0.007, 0.007] as const, color: '#8a82ff', opacity: 0.54 },
-      { position: [1.118, 0.22, 1.116] as const, scale: [0.007, 1.2, 0.007] as const, color: '#dfe7ff', opacity: 0.38 },
-      { position: [-1.118, 0.18, 1.116] as const, scale: [0.007, 0.86, 0.007] as const, color: '#6f93ff', opacity: 0.16 },
-      { position: [0.1, -1.118, 1.116] as const, scale: [1.08, 0.006, 0.006] as const, color: '#7772ff', opacity: 0.22 },
-      { position: [1.116, 1.118, -0.06] as const, scale: [0.007, 0.007, 1.28] as const, color: '#c6d7ff', opacity: 0.28 },
-      { position: [-1.116, 1.118, 0.1] as const, scale: [0.007, 0.007, 1.08] as const, color: '#766fff', opacity: 0.18 },
-    ],
-    [],
-  )
-
-  return (
-    <group>
-      {strips.map((strip, index) => (
-        <mesh key={index} position={strip.position} scale={strip.scale}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshBasicMaterial
-            color={strip.color}
-            transparent
-            opacity={strip.opacity}
-            depthWrite={false}
-            blending={AdditiveBlending}
-            toneMapped={false}
-          />
-        </mesh>
-      ))}
-    </group>
-  )
-}
-
 type PremiumCubeProps = {
   animateGlints: boolean
   sections: CubeSection[]
@@ -362,7 +330,6 @@ export function PremiumCube({ animateGlints, sections, shadows }: PremiumCubePro
         </mesh>
       ))}
 
-      <ObsidianRimLights />
       <ShineGlints animate={animateGlints} />
     </group>
   )

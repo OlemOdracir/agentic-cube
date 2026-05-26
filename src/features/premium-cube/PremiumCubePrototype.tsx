@@ -2,6 +2,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactElement } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Bloom, EffectComposer, Noise, Vignette } from '@react-three/postprocessing'
+import { CUBE_FACE_ORDER } from './cubeSections'
 import type { CubeSection, CubeSectionId } from './cubeSections'
 import { useSiteContent } from './content/useSiteContent'
 import { readDiagnosticFx } from './diagnosticFx'
@@ -9,12 +10,12 @@ import { CubeScene } from './scene/CubeScene'
 
 function SectionGlyph({ className = 'section-panel__glyph', sectionId }: { className?: string; sectionId: CubeSectionId }) {
   const accentBySection: Record<CubeSectionId, string> = {
-    agentic: '#9acbf2',
-    products: '#c28a5a',
-    systems: '#b9c7d6',
-    security: '#89d6c7',
+    agentic: '#9fa5e1',
+    products: '#9fa5e1',
+    systems: '#b8c7ff',
+    security: '#8ea7ff',
     research: '#b9a7ff',
-    contact: '#f0d2b4',
+    contact: '#d2d8ff',
   }
   const accent = accentBySection[sectionId]
 
@@ -200,9 +201,18 @@ function FaceArtifact({ copy, section }: FaceArtifactProps) {
   )
 }
 
+function readInitialSectionId(): CubeSectionId | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  const requestedSection = new URLSearchParams(window.location.search).get('section')
+  return CUBE_FACE_ORDER.includes(requestedSection as CubeSectionId) ? (requestedSection as CubeSectionId) : null
+}
+
 export function PremiumCubePrototype() {
   const [cursorMode, setCursorMode] = useState<'default' | 'grab' | 'grabbing'>('default')
-  const [activeSectionId, setActiveSectionId] = useState<CubeSectionId | null>(null)
+  const [activeSectionId, setActiveSectionId] = useState<CubeSectionId | null>(() => readInitialSectionId())
   const sectionPanelRef = useRef<HTMLElement | null>(null)
   const { content, locale, sections, setLocale } = useSiteContent()
   const [effects] = useState(() => readDiagnosticFx())
