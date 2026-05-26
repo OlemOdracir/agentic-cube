@@ -18,115 +18,128 @@
     {
       "id": "agentic",
       "label": "AGENTIC",
-      "title": "Ingeniería de Productos Agénticos",
-      "summary": "Construcción de productos con agentes de IA, especificaciones, prototipos rápidos e iteración con criterio productivo.",
-      "intro": "Describe aquí tu visión profesional sobre desarrollo agéntico sin publicar información privada.",
-      "highlights": [
-        "Define el método de trabajo que quieres demostrar.",
-        "Explica cómo conviertes ideas en prototipos verificables.",
-        "Conecta tu experiencia previa con tu nueva dirección profesional."
+      "title": "Productos Agénticos",
+      "summary": "Diseño y construcción de sistemas autónomos que perciben, deciden y ejecutan acciones para generar impacto real.",
+      "features": [
+        { "glyph": "eye", "label": "Visión Práctica", "description": "Agentes no para improvisar más, sino para convertir intención en resultados." },
+        { "glyph": "shield", "label": "Sistemas Verificables", "description": "Diseño con restricciones reales, observabilidad y decisiones auditables." },
+        { "glyph": "rocket", "label": "Del Diseño a Producción", "description": "De prototipos rápidos a soluciones confiables y escalables." },
+        { "glyph": "chart", "label": "Impacto Real", "description": "Soluciones que generan valor medible en el negocio y en las personas." }
       ],
-      "proofPoints": [
-        "Este sitio puede actuar como evidencia pública del flujo de trabajo.",
-        "El contenido real se carga desde archivos locales ignorados por Git."
-      ]
+      "flowTitle": "FLUJO AGÉNTICO",
+      "flow": [
+        { "label": "ESPECIFICAR", "description": "Definir objetivo, contexto y restricciones verificables." },
+        { "label": "PROTOTIPAR", "description": "Construir rápido, iterar con datos reales y validar supuestos." },
+        { "label": "VALIDAR", "description": "Medir, testear y asegurar que el agente cumple su propósito." },
+        { "label": "PUBLICAR", "description": "Desplegar con monitoreo, trazabilidad y control continuo." }
+      ],
+      "ctaPrimary": { "label": "EXPLORAR ENFOQUE" },
+      "ctaSecondary": { "label": "VER METODOLOGÍA" }
     },
     {
       "id": "products",
       "label": "PRODUCTS",
       "title": "Productos Públicos",
       "summary": "Herramientas open source y experimentos de producto que demuestran ejecución, seguridad y usabilidad.",
-      "intro": "Usa esta sección para destacar pocos productos relevantes, no un inventario completo.",
-      "highlights": [
-        "Producto o repositorio principal.",
-        "Prototipo actual como evidencia del proceso.",
-        "Criterio de diseño, utilidad y mantenimiento."
+      "features": [
+        { "glyph": "rocket", "label": "Repositorio Principal", "description": "El proyecto que mejor muestra la dirección actual." },
+        { "glyph": "spark", "label": "Este Prototipo", "description": "El sitio mismo como evidencia del flujo de trabajo." },
+        { "glyph": "eye", "label": "Criterio de Diseño", "description": "Decisiones bajo restricciones reales, no sobre una pizarra." },
+        { "glyph": "chart", "label": "Mantenibilidad", "description": "Código que sobrevive más allá del demo." }
       ],
-      "proofPoints": [
-        "Agrega links públicos solo cuando estén listos para revisión."
+      "flowTitle": "FLUJO DE RELEASE",
+      "flow": [
+        { "label": "ACOTAR", "description": "Elegir qué vale la pena publicar y qué no." },
+        { "label": "CONSTRUIR", "description": "Software que funciona antes que promesas pulidas." },
+        { "label": "ENDURECER", "description": "Tests, docs, errores y observabilidad." },
+        { "label": "PUBLICAR", "description": "Abrir el artefacto y hacerse cargo de su evolución." }
       ],
-      "links": [
-        {
-          "label": "Repositorio principal",
-          "description": "Link público al proyecto que quieras mostrar primero.",
-          "href": "https://github.com/your-handle/your-project"
-        },
-        {
-          "label": "Portfolio",
-          "description": "Este mismo sitio como evidencia del flujo de trabajo agéntico."
-        }
-      ]
+      "ctaPrimary": { "label": "ABRIR REPOSITORIO", "href": "https://github.com/your-handle/your-project" },
+      "ctaSecondary": { "label": "VER PROYECTOS" }
     },
     {
       "id": "systems",
       "label": "SYSTEMS",
       "title": "Sistemas Productivos",
-      "summary": "Experiencia en modernización legacy, bases de datos, arquitectura y restricciones operativas reales.",
-      "intro": "Resume la base técnica que sostiene tu transición profesional.",
-      "highlights": [
-        "Modernización, datos e integraciones.",
-        "Arquitectura y continuidad operacional.",
-        "Dirección futura hacia cloud y producción."
+      "summary": "Modernización legacy, bases de datos, arquitectura, dirección hacia cloud y restricciones operativas reales.",
+      "features": [
+        { "glyph": "shield", "label": "Modernización Legacy", "description": "Avanzar sin romper lo que ya funciona." },
+        { "glyph": "spark", "label": "Datos e Integraciones", "description": "Esquemas, contratos y fronteras confiables." },
+        { "glyph": "rocket", "label": "Dirección Cloud", "description": "Camino pragmático a serverless y servicios gestionados." },
+        { "glyph": "chart", "label": "Continuidad Operacional", "description": "Uptime, runbooks y on-call humano." }
       ],
-      "proofPoints": [
-        "El enfoque agéntico debe apoyarse en ingeniería convencional sólida."
-      ]
+      "flowTitle": "FLUJO DE ENTREGA",
+      "flow": [
+        { "label": "OBSERVAR", "description": "Ver el sistema real antes de cambiarlo." },
+        { "label": "CONTENER", "description": "Estabilizar primero las uniones de mayor riesgo." },
+        { "label": "EVOLUCIONAR", "description": "Reescrituras incrementales detrás de feature flags." },
+        { "label": "OPERAR", "description": "Logs, métricas, trazas y responsabilidad clara." }
+      ],
+      "ctaPrimary": { "label": "VER ARQUITECTURA" },
+      "ctaSecondary": { "label": "CASOS DE ESTUDIO" }
     },
     {
       "id": "security",
       "label": "SECURITY",
       "title": "Criterio de Seguridad",
       "summary": "Defaults seguros, MFA, rate limiting, validación y conciencia de riesgo productivo.",
-      "intro": "Explica cómo aplicarás seguridad proporcional según el riesgo real.",
-      "highlights": [
-        "Código público separado de contenido privado.",
-        "Autenticación fuerte para administración.",
-        "Protección progresiva para formularios y backend."
+      "features": [
+        { "glyph": "lock", "label": "Defaults Seguros", "description": "Mínimo privilegio, sin secretos en el repo, releases firmados." },
+        { "glyph": "shield", "label": "Autenticación Fuerte", "description": "MFA, tokens de vida corta, auditoría." },
+        { "glyph": "eye", "label": "Validación de Entrada", "description": "Entradas con esquema, rate limits, controles de abuso." },
+        { "glyph": "chart", "label": "Riesgo Proporcional", "description": "Controles a la altura del impacto real." }
       ],
-      "proofPoints": [
-        "No publiques secretos, datos personales ni credenciales en el repositorio."
-      ]
+      "flowTitle": "FLUJO DE CONTROLES",
+      "flow": [
+        { "label": "INVENTARIAR", "description": "Saber qué proteges y por qué." },
+        { "label": "ENDURECER", "description": "MFA, secretos, higiene de dependencias y WAF cuando paga." },
+        { "label": "MONITOREAR", "description": "Detectar abuso, loguear con cuidado, evitar datos sensibles en logs." },
+        { "label": "RESPONDER", "description": "Rotar, contener y escribir un postmortem limpio." }
+      ],
+      "ctaPrimary": { "label": "VER CONTROLES" },
+      "ctaSecondary": { "label": "MODELO DE AMENAZAS" }
     },
     {
       "id": "research",
       "label": "RESEARCH",
-      "title": "Investigacion Independiente",
+      "title": "Investigación Independiente",
       "summary": "Trabajo sobre IA, pensamiento, verdad, representación, papers y escritura de largo aliento.",
-      "intro": "Presenta la línea intelectual sin convertir el sitio en un archivo completo.",
-      "highlights": [
-        "Temas de investigación.",
-        "Relación con IA y producto.",
-        "Capacidad de abstracción aplicada."
+      "features": [
+        { "glyph": "spark", "label": "Eje: Pensamiento", "description": "Cómo la representación define lo que un sistema puede saber." },
+        { "glyph": "eye", "label": "Eje: Verdad", "description": "Interfaces honestas, resúmenes fieles, UX sin alucinaciones." },
+        { "glyph": "shield", "label": "Eje: Uso de IA", "description": "Aumento con auditabilidad, no reemplazo." },
+        { "glyph": "chart", "label": "Eje: Escritura", "description": "Borradores largos que se sostienen bajo sus propias afirmaciones." }
       ],
-      "proofPoints": [
-        "Curar es mejor que volcar todo el material personal."
-      ]
+      "flowTitle": "FLUJO DE INDAGACIÓN",
+      "flow": [
+        { "label": "PREGUNTAR", "description": "Encuadrar lo que realmente se desconoce." },
+        { "label": "LEER", "description": "Construir un mapa previo pequeño y bien citado." },
+        { "label": "REDACTAR", "description": "Argumentar por escrito, no en slides." },
+        { "label": "PUBLICAR", "description": "Curado, nunca volcado." }
+      ],
+      "ctaPrimary": { "label": "LEER PAPERS" },
+      "ctaSecondary": { "label": "ABRIR NOTAS" }
     },
     {
       "id": "contact",
       "label": "CONTACT",
       "title": "Contacto",
       "summary": "Links profesionales y canales de contacto para colaboración y oportunidades.",
-      "intro": "Deja canales mínimos para contacto profesional.",
-      "highlights": [
-        "Nombre público.",
-        "GitHub o portfolio.",
-        "Correo profesional cuando exista dominio propio."
+      "features": [
+        { "glyph": "spark", "label": "Nombre Público", "description": "Usar el nombre completo buscable como referencia." },
+        { "glyph": "rocket", "label": "GitHub", "description": "Trabajo open source y este prototipo." },
+        { "glyph": "eye", "label": "LinkedIn", "description": "Contexto e historia profesional." },
+        { "glyph": "shield", "label": "Email", "description": "Canal directo y de bajo ruido para oportunidades." }
       ],
-      "proofPoints": [
-        "No publiques datos que deban vivir en configuración privada."
+      "flowTitle": "CANALES",
+      "flow": [
+        { "label": "ABRIR", "description": "Bandeja abierta para colaboración seria." },
+        { "label": "INFORMAR", "description": "Enviar contexto: rol, alcance, restricciones." },
+        { "label": "REUNIR", "description": "Llamada corta para alinear ajuste y alcance." },
+        { "label": "COMPROMETER", "description": "Avanzar solo cuando ambos lados ven el valor." }
       ],
-      "links": [
-        {
-          "label": "GitHub",
-          "description": "Perfil público o repositorio principal.",
-          "href": "https://github.com/your-handle"
-        },
-        {
-          "label": "Email",
-          "description": "Correo profesional asociado al dominio cuando esté listo."
-        }
-      ]
+      "ctaPrimary": { "label": "ESCRIBIR EMAIL" },
+      "ctaSecondary": { "label": "ABRIR GITHUB", "href": "https://github.com/your-handle" }
     }
   ]
 }

@@ -1,10 +1,27 @@
 import { z } from 'zod'
-import { CUBE_FACE_ORDER, CUBE_SECTIONS } from '../cubeSections'
-import type { CubeSection, CubeSectionId } from '../cubeSections'
+import { CUBE_FACE_ORDER, CUBE_SECTIONS, FEATURE_GLYPHS } from '../cubeSections'
+import type { CubeSection, CubeSectionId, FeatureGlyphId } from '../cubeSections'
 
 export type SiteLocale = 'en' | 'es'
 
 const SectionIdSchema = z.enum(CUBE_FACE_ORDER as [CubeSectionId, ...CubeSectionId[]])
+const FeatureGlyphSchema = z.enum(FEATURE_GLYPHS as unknown as [FeatureGlyphId, ...FeatureGlyphId[]])
+
+const CtaSchema = z.object({
+  label: z.string().min(1),
+  href: z.string().min(1).optional(),
+})
+
+const FeatureSchema = z.object({
+  glyph: FeatureGlyphSchema,
+  label: z.string().min(1),
+  description: z.string().min(1),
+})
+
+const FlowStepSchema = z.object({
+  label: z.string().min(1),
+  description: z.string().min(1),
+})
 
 const SiteSectionSchema = z.object({
   id: SectionIdSchema,
@@ -23,12 +40,12 @@ const SiteSectionSchema = z.object({
       }),
     )
     .optional(),
-  cta: z
-    .object({
-      label: z.string().min(1),
-      href: z.string().min(1).optional(),
-    })
-    .optional(),
+  cta: CtaSchema.optional(),
+  features: z.array(FeatureSchema).optional(),
+  flowTitle: z.string().min(1).optional(),
+  flow: z.array(FlowStepSchema).optional(),
+  ctaPrimary: CtaSchema.optional(),
+  ctaSecondary: CtaSchema.optional(),
 })
 
 const SiteContentSchema = z.object({
@@ -151,6 +168,11 @@ export function normalizeSections(sections: SiteSection[]): CubeSection[] {
       proofPoints: section?.proofPoints,
       links: section?.links,
       cta: section?.cta,
+      features: section?.features ?? fallback.features,
+      flowTitle: section?.flowTitle ?? fallback.flowTitle,
+      flow: section?.flow ?? fallback.flow,
+      ctaPrimary: section?.ctaPrimary ?? fallback.ctaPrimary,
+      ctaSecondary: section?.ctaSecondary ?? fallback.ctaSecondary,
     }
   })
 }

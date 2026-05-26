@@ -19,114 +19,127 @@
       "id": "agentic",
       "label": "AGENTIC",
       "title": "Agentic Product Engineering",
-      "summary": "Building products with AI agents, specs, fast prototypes, and production-minded iteration.",
-      "intro": "Describe your professional vision for agentic development without publishing private information.",
-      "highlights": [
-        "Define the working method you want to demonstrate.",
-        "Explain how you turn ideas into verifiable prototypes.",
-        "Connect your previous experience with your new professional direction."
+      "summary": "Design and construction of autonomous systems that perceive, decide, and act to deliver real impact.",
+      "features": [
+        { "glyph": "eye", "label": "Practical Vision", "description": "Agents that turn intent into measurable results." },
+        { "glyph": "shield", "label": "Verifiable Systems", "description": "Real constraints, observability, auditable decisions." },
+        { "glyph": "rocket", "label": "Design to Production", "description": "Fast prototypes to reliable, scalable solutions." },
+        { "glyph": "chart", "label": "Real Impact", "description": "Value measurable in business and in people." }
       ],
-      "proofPoints": [
-        "This site can act as public evidence of the workflow.",
-        "Real content loads from local files ignored by Git."
-      ]
+      "flowTitle": "AGENTIC FLOW",
+      "flow": [
+        { "label": "SPECIFY", "description": "Define objective, context, and verifiable constraints." },
+        { "label": "PROTOTYPE", "description": "Build fast, iterate with real data, validate assumptions." },
+        { "label": "VERIFY", "description": "Measure, test, ensure the agent meets its purpose." },
+        { "label": "SHIP", "description": "Deploy with monitoring, traceability, and continuous control." }
+      ],
+      "ctaPrimary": { "label": "EXPLORE APPROACH" },
+      "ctaSecondary": { "label": "VIEW METHODOLOGY" }
     },
     {
       "id": "products",
       "label": "PRODUCTS",
       "title": "Public Products",
       "summary": "Open-source tools and product experiments that demonstrate execution, safety, and usability.",
-      "intro": "Use this section to highlight a few relevant products, not a full inventory.",
-      "highlights": [
-        "Main product or repository.",
-        "Current prototype as evidence of process.",
-        "Design judgment, utility, and maintainability."
+      "features": [
+        { "glyph": "rocket", "label": "Main Repository", "description": "The project that best shows current direction." },
+        { "glyph": "spark", "label": "This Prototype", "description": "The site itself as evidence of the workflow." },
+        { "glyph": "eye", "label": "Design Judgment", "description": "Choices made under real constraints, not on a whiteboard." },
+        { "glyph": "chart", "label": "Maintainability", "description": "Code that survives past the demo." }
       ],
-      "proofPoints": [
-        "Add public links only when they are ready for review."
+      "flowTitle": "RELEASE FLOW",
+      "flow": [
+        { "label": "SCOPE", "description": "Pick what is worth shipping and what is not." },
+        { "label": "BUILD", "description": "Working software over polished promises." },
+        { "label": "HARDEN", "description": "Tests, docs, error paths, observability." },
+        { "label": "PUBLISH", "description": "Open the artifact and own its evolution." }
       ],
-      "links": [
-        {
-          "label": "Main repository",
-          "description": "Public link to the project you want to show first.",
-          "href": "https://github.com/your-handle/your-project"
-        },
-        {
-          "label": "Portfolio",
-          "description": "This site as evidence of the agentic workflow."
-        }
-      ]
+      "ctaPrimary": { "label": "OPEN REPOSITORY", "href": "https://github.com/your-handle/your-project" },
+      "ctaSecondary": { "label": "VIEW PROJECTS" }
     },
     {
       "id": "systems",
       "label": "SYSTEMS",
       "title": "Production Systems",
-      "summary": "Experience with legacy modernization, databases, architecture, and real operational constraints.",
-      "intro": "Summarize the technical foundation behind your professional transition.",
-      "highlights": [
-        "Modernization, data, and integrations.",
-        "Architecture and operational continuity.",
-        "Future direction toward cloud and production."
+      "summary": "Legacy modernization, databases, architecture, cloud direction, and real operational constraints.",
+      "features": [
+        { "glyph": "shield", "label": "Legacy Modernization", "description": "Move forward without breaking what already works." },
+        { "glyph": "spark", "label": "Data and Integrations", "description": "Schemas, contracts, and reliable boundaries." },
+        { "glyph": "rocket", "label": "Cloud Direction", "description": "A pragmatic path toward serverless and managed services." },
+        { "glyph": "chart", "label": "Operational Continuity", "description": "Uptime, runbooks, and humane on-call." }
       ],
-      "proofPoints": [
-        "The agentic approach should be grounded in solid conventional engineering."
-      ]
+      "flowTitle": "DELIVERY FLOW",
+      "flow": [
+        { "label": "OBSERVE", "description": "See the real system before changing it." },
+        { "label": "CONTAIN", "description": "Stabilize the riskiest seams first." },
+        { "label": "EVOLVE", "description": "Incremental rewrites under feature flags." },
+        { "label": "OPERATE", "description": "Logs, metrics, traces, and clear ownership." }
+      ],
+      "ctaPrimary": { "label": "VIEW ARCHITECTURE" },
+      "ctaSecondary": { "label": "CASE STUDIES" }
     },
     {
       "id": "security",
       "label": "SECURITY",
       "title": "Security Mindset",
       "summary": "Secure defaults, MFA, rate limiting, validation, and production risk awareness.",
-      "intro": "Explain how you will apply proportional security according to actual risk.",
-      "highlights": [
-        "Public code separated from private content.",
-        "Strong authentication for administration.",
-        "Progressive protection for forms and backend."
+      "features": [
+        { "glyph": "lock", "label": "Secure Defaults", "description": "Least privilege, no secrets in repos, signed releases." },
+        { "glyph": "shield", "label": "Strong Auth", "description": "MFA, short-lived tokens, audit trail." },
+        { "glyph": "eye", "label": "Input Validation", "description": "Schema-first inputs, rate limits, abuse controls." },
+        { "glyph": "chart", "label": "Risk Proportion", "description": "Controls matched to actual blast radius." }
       ],
-      "proofPoints": [
-        "Do not publish secrets, personal data, or credentials in the repository."
-      ]
+      "flowTitle": "CONTROLS FLOW",
+      "flow": [
+        { "label": "INVENTORY", "description": "Know what you protect and why." },
+        { "label": "HARDEN", "description": "MFA, secrets, dependency hygiene, WAF where it pays." },
+        { "label": "MONITOR", "description": "Detect abuse, log carefully, avoid sensitive content in logs." },
+        { "label": "RESPOND", "description": "Rotate, contain, write a clean post-mortem." }
+      ],
+      "ctaPrimary": { "label": "VIEW CONTROLS" },
+      "ctaSecondary": { "label": "THREAT MODEL" }
     },
     {
       "id": "research",
       "label": "RESEARCH",
       "title": "Independent Research",
       "summary": "Work on AI, thought, truth, representation, papers, and long-form writing.",
-      "intro": "Present the intellectual line without turning the site into a complete archive.",
-      "highlights": [
-        "Research themes.",
-        "Relationship with AI and product.",
-        "Applied abstraction capability."
+      "features": [
+        { "glyph": "spark", "label": "Theme: Thought", "description": "How representation shapes what a system can know." },
+        { "glyph": "eye", "label": "Theme: Truth", "description": "Honest interfaces, faithful summaries, no hallucinated UX." },
+        { "glyph": "shield", "label": "Theme: AI Use", "description": "Augmentation with auditability, not replacement." },
+        { "glyph": "chart", "label": "Theme: Writing", "description": "Long-form drafts that hold up under their own claims." }
       ],
-      "proofPoints": [
-        "Curation is better than dumping all personal material."
-      ]
+      "flowTitle": "INQUIRY FLOW",
+      "flow": [
+        { "label": "QUESTION", "description": "Frame what is actually unknown." },
+        { "label": "READ", "description": "Build a small, well-cited prior map." },
+        { "label": "DRAFT", "description": "Argue in writing, not in slides." },
+        { "label": "PUBLISH", "description": "Curated, never a dump." }
+      ],
+      "ctaPrimary": { "label": "READ PAPERS" },
+      "ctaSecondary": { "label": "OPEN NOTES" }
     },
     {
       "id": "contact",
       "label": "CONTACT",
       "title": "Contact",
       "summary": "Professional links and contact channels for collaboration and opportunities.",
-      "intro": "Leave minimal channels for professional contact.",
-      "highlights": [
-        "Public name.",
-        "GitHub or portfolio.",
-        "Professional email once a custom domain exists."
+      "features": [
+        { "glyph": "spark", "label": "Public Name", "description": "Use the searchable full name for record." },
+        { "glyph": "rocket", "label": "GitHub", "description": "Open-source work and this prototype." },
+        { "glyph": "eye", "label": "LinkedIn", "description": "Professional context and history." },
+        { "glyph": "shield", "label": "Email", "description": "Direct, low-noise channel for opportunities." }
       ],
-      "proofPoints": [
-        "Do not publish data that should live in private configuration."
+      "flowTitle": "CHANNELS",
+      "flow": [
+        { "label": "OPEN", "description": "Inbox is open for serious collaboration." },
+        { "label": "BRIEF", "description": "Send context: role, scope, constraints." },
+        { "label": "MEET", "description": "Short call to align on fit and scope." },
+        { "label": "COMMIT", "description": "Move only when both sides see the value." }
       ],
-      "links": [
-        {
-          "label": "GitHub",
-          "description": "Public profile or main repository.",
-          "href": "https://github.com/your-handle"
-        },
-        {
-          "label": "Email",
-          "description": "Professional email attached to the domain when ready."
-        }
-      ]
+      "ctaPrimary": { "label": "WRITE AN EMAIL" },
+      "ctaSecondary": { "label": "OPEN GITHUB", "href": "https://github.com/your-handle" }
     }
   ]
 }

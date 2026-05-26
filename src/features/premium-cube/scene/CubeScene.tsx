@@ -1,6 +1,7 @@
 import { PerspectiveCamera, Stars } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
+import type { RefObject } from 'react'
 import type { Group } from 'three'
 import { AdditiveBlending, CanvasTexture, Color, LinearFilter, MathUtils, SRGBColorSpace, Vector2, Vector3 } from 'three'
 import {
@@ -15,6 +16,11 @@ import type { CubeSection } from '../cubeSections'
 import type { DiagnosticFx } from '../diagnosticFx'
 import { CampusEnvironment } from './CampusEnvironment'
 import { PremiumCube } from './PremiumCube'
+import { WaveField } from './WaveField'
+
+export type CubeSceneHandle = {
+  enterSection: (sectionId: CubeSectionId) => void
+}
 
 type CubeSceneProps = {
   effects: DiagnosticFx
@@ -22,6 +28,7 @@ type CubeSceneProps = {
   onSectionEnter: (sectionId: CubeSectionId) => void
   sectionOpen: boolean
   sections: CubeSection[]
+  handleRef?: RefObject<CubeSceneHandle | null>
 }
 
 type PointerEventLike = {
@@ -177,7 +184,7 @@ function PlatformTicks({ radius, count, faint = false }: PlatformTicksProps) {
   )
 }
 
-export function CubeScene({ effects, onCursorModeChange, onSectionEnter, sectionOpen, sections }: CubeSceneProps) {
+export function CubeScene({ effects, onCursorModeChange, onSectionEnter, sectionOpen, sections, handleRef }: CubeSceneProps) {
   const rigRef = useRef<Group>(null)
   const platformGlowTexture = useMemo(
     () => createGlowTexture('rgba(180, 170, 255, 0.85)', 'rgba(110, 96, 230, 0.32)'),
@@ -191,7 +198,7 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
     complete: false,
     sectionId: 'agentic' as CubeSectionId,
     startedAt: 0,
-    duration: 1.28,
+    duration: 0.7,
     startRotation: [0, 0, 0] as [number, number, number],
     targetRotation: [0, 0, 0] as [number, number, number],
   })
@@ -259,7 +266,7 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
       complete: false,
       sectionId,
       startedAt: performance.now() / 1000,
-      duration: 1.28,
+      duration: 0.7,
       startRotation: currentRotation,
       targetRotation: [
         closestAngle(currentRotation[0], targetRotation[0]),
@@ -270,6 +277,8 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
     onCursorModeChange('default')
     void playCubeTransitionSound()
   }, [closestAngle, onCursorModeChange, sectionOpen])
+
+  useImperativeHandle(handleRef, () => ({ enterSection }), [enterSection])
 
   useFrame(({ clock, pointer }) => {
     if (!rigRef.current) {
@@ -297,12 +306,9 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
         ? 1
         : 0
     const transitionProgress = easeInOutCubic(rawProgress)
-    const baseCameraPosition = new Vector3(...cameraPosition)
-    const targetCameraPosition = isNarrow ? new Vector3(0, 0.18, 2.35) : new Vector3(0, 0.12, 2.05)
-    const targetScale = cubeScale * (isNarrow ? 2.6 : 3.05)
 
-    camera.position.lerpVectors(baseCameraPosition, targetCameraPosition, transitionProgress)
-    camera.lookAt(0, MathUtils.lerp(cameraTargetY, 0.02, transitionProgress), 0)
+    camera.position.set(cameraPosition[0], cameraPosition[1], cameraPosition[2])
+    camera.lookAt(0, cameraTargetY, 0)
 
     if (transition.active && !transition.complete && rawProgress > 0.86) {
       transition.complete = true
@@ -313,9 +319,9 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
       transition.active = false
     }
 
-    rigRef.current.scale.setScalar(MathUtils.lerp(cubeScale, targetScale, transitionProgress))
-    rigRef.current.position.y = cubeBaseY + (effects.idle ? Math.sin(t * 0.72) * 0.035 : 0) + transitionProgress * 0.05
-    if (transitionProgress > 0) {
+    rigRef.current.scale.setScalar(cubeScale)
+    rigRef.current.position.y = cubeBaseY + (effects.idle ? Math.sin(t * 0.72) * 0.035 : 0)
+    if (transition.active) {
       rigRef.current.rotation.set(
         MathUtils.lerp(transition.startRotation[0], transition.targetRotation[0], transitionProgress),
         MathUtils.lerp(transition.startRotation[1], transition.targetRotation[1], transitionProgress),
@@ -579,9 +585,11 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
         <PlatformTicks radius={2.5} count={120} faint />
       </group>
 
+      <WaveField />
+
       <mesh position={[0, 1.2, -4.5]}>
         <planeGeometry args={[22, 14]} />
-        <meshBasicMaterial map={gridTexture} transparent opacity={0.7} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial map={gridTexture} transparent opacity={0.5} depthWrite={false} toneMapped={false} />
       </mesh>
 
       <mesh position={[0, 4.6, -0.4]}>
@@ -596,7 +604,7 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
         />
       </mesh>
 
-      <Stars radius={25} depth={8} count={140} factor={0.4} saturation={0} fade speed={0} />
+      <Stars radius={25} depth={8} count={120} factor={0.32} saturation={0} fade speed={0} />
     </>
   )
 }

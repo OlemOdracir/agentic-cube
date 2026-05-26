@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactElement } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Bloom, EffectComposer, Noise, Vignette } from '@react-three/postprocessing'
@@ -7,6 +7,10 @@ import type { CubeSection, CubeSectionId } from './cubeSections'
 import { useSiteContent } from './content/useSiteContent'
 import { readDiagnosticFx } from './diagnosticFx'
 import { CubeScene } from './scene/CubeScene'
+import type { CubeSceneHandle } from './scene/CubeScene'
+import { SidePanels } from './SidePanels'
+
+const ENABLE_FULLSCREEN_SECTION = false
 
 function SectionGlyph({ className = 'section-panel__glyph', sectionId }: { className?: string; sectionId: CubeSectionId }) {
   const accentBySection: Record<CubeSectionId, string> = {
@@ -201,18 +205,23 @@ function FaceArtifact({ copy, section }: FaceArtifactProps) {
   )
 }
 
-function readInitialSectionId(): CubeSectionId | null {
+function readInitialSectionId(): CubeSectionId {
   if (typeof window === 'undefined') {
-    return null
+    return 'agentic'
   }
 
   const requestedSection = new URLSearchParams(window.location.search).get('section')
-  return CUBE_FACE_ORDER.includes(requestedSection as CubeSectionId) ? (requestedSection as CubeSectionId) : null
+  return CUBE_FACE_ORDER.includes(requestedSection as CubeSectionId) ? (requestedSection as CubeSectionId) : 'agentic'
 }
 
 export function PremiumCubePrototype() {
   const [cursorMode, setCursorMode] = useState<'default' | 'grab' | 'grabbing'>('default')
-  const [activeSectionId, setActiveSectionId] = useState<CubeSectionId | null>(() => readInitialSectionId())
+  const [activeSectionId, setActiveSectionId] = useState<CubeSectionId>(() => readInitialSectionId())
+  const cubeSceneRef = useRef<CubeSceneHandle | null>(null)
+  const requestFaceChange = useCallback((id: CubeSectionId) => {
+    if (id === activeSectionId) return
+    cubeSceneRef.current?.enterSection(id)
+  }, [activeSectionId])
   const sectionPanelRef = useRef<HTMLElement | null>(null)
   const { content, locale, sections, setLocale } = useSiteContent()
   const [effects] = useState(() => readDiagnosticFx())
@@ -343,9 +352,11 @@ export function PremiumCubePrototype() {
     }
   }, [activeSectionId])
 
+  const fullscreenActive = ENABLE_FULLSCREEN_SECTION && activeSection !== null
+
   return (
     <main
-      className={`prototype-shell is-${cursorMode} ${activeSection ? 'has-section' : ''}`}
+      className={`prototype-shell is-${cursorMode} ${fullscreenActive ? 'has-section' : ''}`}
       aria-label="Premium cube prototype"
       style={{ width: viewport.width || '100vw', height: viewport.height || '100vh' }}
     >
@@ -371,8 +382,9 @@ export function PremiumCubePrototype() {
               onSectionEnter={(sectionId) => {
                 setActiveSectionId(sectionId)
               }}
-              sectionOpen={activeSection !== null}
+              sectionOpen={fullscreenActive}
               sections={sections}
+              handleRef={cubeSceneRef}
             />
             {postProcessingEffects.length > 0 && (
               <EffectComposer multisampling={4}>{postProcessingEffects}</EffectComposer>
@@ -409,8 +421,18 @@ export function PremiumCubePrototype() {
         </button>
       </div>
 
-      <section className="section-panel" aria-hidden={!activeSection} ref={sectionPanelRef}>
-        {activeSection && (
+      {!ENABLE_FULLSCREEN_SECTION && activeSection && (
+        <SidePanels
+          activeSection={activeSection}
+          sections={sections}
+          locale={locale}
+          fullName={content.identity.fullName}
+          onSelectSection={requestFaceChange}
+        />
+      )}
+
+      <section className="section-panel" aria-hidden={!fullscreenActive} ref={sectionPanelRef}>
+        {ENABLE_FULLSCREEN_SECTION && activeSection && (
           <div className="section-panel__inner">
             <span className="section-panel__aperture" aria-hidden="true" />
 
@@ -496,7 +518,7 @@ export function PremiumCubePrototype() {
                       {activeSection.cta.label}
                     </a>
                   )}
-                  <button type="button" onClick={() => setActiveSectionId(null)}>
+                  <button type="button" onClick={() => setActiveSectionId('agentic')}>
                     {sectionCopy.back}
                   </button>
                 </div>
