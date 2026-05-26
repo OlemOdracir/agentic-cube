@@ -7,12 +7,12 @@ import type { CubeSection } from '../cubeSections'
 import type { CubeSectionId } from '../cubeSections'
 
 const FACE_ACCENTS: Record<CubeSectionId, string> = {
-  agentic: 'rgba(154, 203, 242, 0.9)',
-  products: 'rgba(194, 138, 90, 0.92)',
-  systems: 'rgba(185, 199, 214, 0.9)',
-  security: 'rgba(137, 214, 199, 0.9)',
-  research: 'rgba(185, 167, 255, 0.9)',
-  contact: 'rgba(240, 210, 180, 0.9)',
+  agentic: 'rgba(150, 146, 255, 0.92)',
+  products: 'rgba(168, 138, 255, 0.9)',
+  systems: 'rgba(176, 205, 255, 0.9)',
+  security: 'rgba(124, 217, 226, 0.88)',
+  research: 'rgba(190, 164, 255, 0.92)',
+  contact: 'rgba(202, 190, 255, 0.9)',
 }
 
 function drawFaceGlyph(ctx: CanvasRenderingContext2D, sectionId: CubeSectionId, x: number, y: number) {
@@ -128,36 +128,45 @@ function createFaceTexture(section: CubeSection, index: number) {
 
   ctx.clearRect(0, 0, size, size)
 
-  const glow = ctx.createRadialGradient(size * 0.5, size * 0.43, 0, size * 0.5, size * 0.43, size * 0.56)
-  glow.addColorStop(0, 'rgba(128, 184, 224, 0.34)')
-  glow.addColorStop(0.38, 'rgba(42, 55, 92, 0.18)')
+  const glow = ctx.createRadialGradient(size * 0.52, size * 0.42, 0, size * 0.52, size * 0.42, size * 0.58)
+  glow.addColorStop(0, 'rgba(154, 146, 255, 0.28)')
+  glow.addColorStop(0.34, 'rgba(36, 42, 88, 0.16)')
   glow.addColorStop(1, 'rgba(0, 0, 0, 0)')
   ctx.fillStyle = glow
   ctx.fillRect(0, 0, size, size)
 
-  ctx.strokeStyle = 'rgba(210, 228, 242, 0.32)'
-  ctx.lineWidth = 4
-  ctx.strokeRect(54, 54, size - 108, size - 108)
-  ctx.strokeStyle = 'rgba(193, 139, 90, 0.36)'
-  ctx.strokeRect(78, 78, size - 156, size - 156)
+  ctx.strokeStyle = 'rgba(218, 226, 255, 0.46)'
+  ctx.lineWidth = 5
+  ctx.strokeRect(62, 62, size - 124, size - 124)
+  ctx.strokeStyle = 'rgba(132, 123, 255, 0.38)'
+  ctx.lineWidth = 3
+  ctx.strokeRect(88, 88, size - 176, size - 176)
+
+  const bevelShade = ctx.createLinearGradient(0, 0, size, size)
+  bevelShade.addColorStop(0, 'rgba(255, 255, 255, 0.1)')
+  bevelShade.addColorStop(0.28, 'rgba(255, 255, 255, 0)')
+  bevelShade.addColorStop(0.7, 'rgba(0, 0, 0, 0)')
+  bevelShade.addColorStop(1, 'rgba(0, 0, 0, 0.38)')
+  ctx.fillStyle = bevelShade
+  ctx.fillRect(62, 62, size - 124, size - 124)
 
   drawFaceGlyph(ctx, section.id, size * 0.5, size * 0.42)
 
-  ctx.strokeStyle = 'rgba(154, 203, 242, 0.28)'
+  ctx.strokeStyle = 'rgba(154, 146, 255, 0.32)'
   ctx.lineWidth = 3
   ctx.beginPath()
   ctx.moveTo(size * 0.24, size * 0.58)
   ctx.lineTo(size * 0.76, size * 0.58)
   ctx.stroke()
 
-  ctx.fillStyle = 'rgba(238, 244, 250, 0.94)'
+  ctx.fillStyle = 'rgba(224, 232, 255, 0.94)'
   ctx.font = '600 68px Inter, Arial, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.letterSpacing = '20px'
   ctx.fillText(section.label, size * 0.5, size * 0.68)
 
-  ctx.fillStyle = 'rgba(154, 203, 242, 0.76)'
+  ctx.fillStyle = 'rgba(170, 176, 255, 0.72)'
   ctx.font = '500 26px Inter, Arial, sans-serif'
   ctx.fillText(`FACE 0${index + 1}`, size * 0.5, size * 0.77)
 
@@ -183,15 +192,15 @@ function createShineTexture() {
 
   const gradient = ctx.createRadialGradient(size * 0.5, size * 0.5, 0, size * 0.5, size * 0.5, size * 0.5)
   gradient.addColorStop(0, 'rgba(255,255,255,1)')
-  gradient.addColorStop(0.12, 'rgba(196,236,255,0.95)')
-  gradient.addColorStop(0.3, 'rgba(109,187,245,0.34)')
+  gradient.addColorStop(0.12, 'rgba(214,214,255,0.95)')
+  gradient.addColorStop(0.3, 'rgba(132,123,255,0.38)')
   gradient.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = gradient
   ctx.fillRect(0, 0, size, size)
 
   ctx.save()
   ctx.translate(size * 0.5, size * 0.5)
-  ctx.strokeStyle = 'rgba(230,248,255,0.9)'
+  ctx.strokeStyle = 'rgba(220,222,255,0.92)'
   ctx.lineWidth = 4
   ctx.beginPath()
   ctx.moveTo(-86, 0)
@@ -272,6 +281,38 @@ function ShineGlints({ animate }: ShineGlintsProps) {
   )
 }
 
+function ObsidianRimLights() {
+  const strips = useMemo(
+    () => [
+      { position: [0.24, 1.122, 1.118] as const, scale: [1.28, 0.007, 0.007] as const, color: '#8a82ff', opacity: 0.54 },
+      { position: [1.118, 0.22, 1.116] as const, scale: [0.007, 1.2, 0.007] as const, color: '#dfe7ff', opacity: 0.38 },
+      { position: [-1.118, 0.18, 1.116] as const, scale: [0.007, 0.86, 0.007] as const, color: '#6f93ff', opacity: 0.16 },
+      { position: [0.1, -1.118, 1.116] as const, scale: [1.08, 0.006, 0.006] as const, color: '#7772ff', opacity: 0.22 },
+      { position: [1.116, 1.118, -0.06] as const, scale: [0.007, 0.007, 1.28] as const, color: '#c6d7ff', opacity: 0.28 },
+      { position: [-1.116, 1.118, 0.1] as const, scale: [0.007, 0.007, 1.08] as const, color: '#766fff', opacity: 0.18 },
+    ],
+    [],
+  )
+
+  return (
+    <group>
+      {strips.map((strip, index) => (
+        <mesh key={index} position={strip.position} scale={strip.scale}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshBasicMaterial
+            color={strip.color}
+            transparent
+            opacity={strip.opacity}
+            depthWrite={false}
+            blending={AdditiveBlending}
+            toneMapped={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
 type PremiumCubeProps = {
   animateGlints: boolean
   sections: CubeSection[]
@@ -293,16 +334,17 @@ export function PremiumCube({ animateGlints, sections, shadows }: PremiumCubePro
     <group>
       <RoundedBox args={[2.18, 2.18, 2.18]} radius={0.105} smoothness={9} castShadow={shadows} receiveShadow={shadows}>
         <meshPhysicalMaterial
-          color={new Color('#0c111a')}
-          metalness={0.86}
-          roughness={0.105}
+          color={new Color('#02040a')}
+          metalness={0.94}
+          roughness={0.068}
           clearcoat={1}
-          clearcoatRoughness={0.075}
-          emissive={new Color('#06101b')}
-          emissiveIntensity={0.26}
-          reflectivity={0.82}
-          transmission={0.06}
-          thickness={0.22}
+          clearcoatRoughness={0.038}
+          emissive={new Color('#030614')}
+          emissiveIntensity={0.18}
+          envMapIntensity={0.54}
+          reflectivity={0.96}
+          transmission={0.035}
+          thickness={0.28}
           ior={1.54}
         />
       </RoundedBox>
@@ -313,13 +355,14 @@ export function PremiumCube({ animateGlints, sections, shadows }: PremiumCubePro
           <meshBasicMaterial
             map={panel.texture}
             transparent
-            opacity={0.88}
+            opacity={0.82}
             depthWrite={false}
             toneMapped={false}
           />
         </mesh>
       ))}
 
+      <ObsidianRimLights />
       <ShineGlints animate={animateGlints} />
     </group>
   )

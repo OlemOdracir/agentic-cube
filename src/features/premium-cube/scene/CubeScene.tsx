@@ -2,7 +2,7 @@ import { PerspectiveCamera, Stars } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useCallback, useEffect, useRef } from 'react'
 import type { Group } from 'three'
-import { Color, MathUtils, Vector2, Vector3 } from 'three'
+import { AdditiveBlending, Color, MathUtils, Vector2, Vector3 } from 'three'
 import {
   playCubeDragTickSound,
   playCubeTransitionSound,
@@ -77,9 +77,9 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
   const { camera, size } = useThree()
   const isNarrow = size.width < 720
   const cubeScale = isNarrow ? 0.62 : 0.74
-  const cubeBaseY = isNarrow ? 0.14 : 0.18
-  const platformScale = isNarrow ? 0.62 : 0.68
-  const platformBaseY = isNarrow ? 0.08 : -0.09
+  const cubeBaseY = isNarrow ? 0.18 : 0.26
+  const platformScale = isNarrow ? 0.66 : 0.74
+  const platformBaseY = isNarrow ? 0.04 : -0.12
   const cameraPosition = isNarrow ? ([0, 0.66, 7.4] as const) : ([0, 0.86, 7.45] as const)
   const cameraTargetY = isNarrow ? 0.02 : -0.14
 
@@ -322,23 +322,33 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
       />
       <CampusEnvironment />
 
-      <ambientLight intensity={0.36} />
+      <ambientLight intensity={0.22} />
       <directionalLight
-        position={[3.7, 4.8, 4.6]}
-        intensity={3.1}
-        color={new Color('#d9efff')}
+        position={[3.9, 4.8, 4.4]}
+        intensity={3.45}
+        color={new Color('#dfeaff')}
         castShadow={effects.shadows}
       />
-      <directionalLight position={[-4.8, 1.8, -3.4]} intensity={1.18} color={new Color('#c28a5a')} />
-      <pointLight position={[0, -1.2, 2.1]} intensity={3.2} color={new Color('#78aee6')} distance={8} />
-      <pointLight position={[1.2, 0.4, 2.2]} intensity={2.8} color={new Color('#c8efff')} distance={4.5} />
-      <pointLight position={[-1.8, 0.9, 1.8]} intensity={1.6} color={new Color('#b89cff')} distance={5} />
+      <directionalLight position={[-4.8, 1.8, -3.4]} intensity={1.55} color={new Color('#7d78ff')} />
+      <pointLight position={[0, -1.04, 1.2]} intensity={4.4} color={new Color('#746fff')} distance={6.8} />
+      <pointLight position={[1.2, 0.4, 2.2]} intensity={2.95} color={new Color('#d8e8ff')} distance={4.5} />
+      <pointLight position={[-1.8, 0.9, 1.8]} intensity={2.35} color={new Color('#8c7bff')} distance={5.5} />
+      <pointLight position={[0, 1.35, -0.7]} intensity={1.9} color={new Color('#5d82ff')} distance={5} />
       <spotLight
-        position={[0.3, 4.2, 3.4]}
-        angle={0.42}
-        penumbra={0.78}
-        intensity={5.4}
-        color={new Color('#f7fbff')}
+        position={[0.1, 4.6, 3.2]}
+        angle={0.38}
+        penumbra={0.84}
+        intensity={6.2}
+        color={new Color('#f1f4ff')}
+        castShadow={effects.shadows}
+      />
+      <spotLight
+        position={[0, -0.96, 0.12]}
+        target-position={[0, 0.2, 0]}
+        angle={0.58}
+        penumbra={0.9}
+        intensity={4.8}
+        color={new Color('#776fff')}
         castShadow={effects.shadows}
       />
 
@@ -363,24 +373,34 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
       </group>
 
       <group scale={platformScale} position={[0, platformBaseY, 0]}>
-        <mesh position={[0, -1.44, 0]} receiveShadow={effects.shadows} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[2.5, 128]} />
-          <meshStandardMaterial color="#05060c" metalness={0.78} roughness={0.32} transparent opacity={0.34} />
-        </mesh>
-
-        <mesh position={[0, -1.425, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[1.12, 1.145, 180]} />
-          <meshBasicMaterial color="#9acbf2" transparent opacity={0.42} />
-        </mesh>
-
-        <mesh position={[0, -1.42, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[1.78, 1.786, 180]} />
-          <meshBasicMaterial color="#c28a5a" transparent opacity={0.12} />
+        <mesh position={[0, -1.455, 0]} receiveShadow={effects.shadows} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[2.72, 180]} />
+          <meshStandardMaterial color="#03040b" metalness={0.82} roughness={0.28} transparent opacity={0.38} />
         </mesh>
 
         <mesh position={[0, -1.418, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[2.22, 2.226, 220]} />
-          <meshBasicMaterial color="#f2e0c8" transparent opacity={0.045} />
+          <circleGeometry args={[0.68, 128]} />
+          <meshBasicMaterial color="#766fff" transparent opacity={0.18} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
+        </mesh>
+
+        <mesh position={[0, -1.412, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.82, 0.835, 180]} />
+          <meshBasicMaterial color="#f1f4ff" transparent opacity={0.48} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
+        </mesh>
+
+        <mesh position={[0, -1.407, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[1.18, 1.192, 220]} />
+          <meshBasicMaterial color="#8b84ff" transparent opacity={0.38} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
+        </mesh>
+
+        <mesh position={[0, -1.402, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[1.72, 1.73, 260]} />
+          <meshBasicMaterial color="#5f7cff" transparent opacity={0.22} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
+        </mesh>
+
+        <mesh position={[0, -1.397, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[2.22, 2.226, 280]} />
+          <meshBasicMaterial color="#cfd8ff" transparent opacity={0.105} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
         </mesh>
       </group>
 
