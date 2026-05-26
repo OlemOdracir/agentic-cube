@@ -74,54 +74,6 @@ function createGlowTexture(inner: string, outer: string) {
   return texture
 }
 
-function createGridTexture() {
-  const s = 1024
-  const canvas = document.createElement('canvas')
-  canvas.width = s
-  canvas.height = s
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return null
-
-  ctx.fillStyle = 'rgba(2, 4, 12, 1)'
-  ctx.fillRect(0, 0, s, s)
-
-  const step = 64
-  ctx.strokeStyle = 'rgba(150, 155, 220, 0.06)'
-  ctx.lineWidth = 1
-  for (let x = 0; x <= s; x += step) {
-    ctx.beginPath()
-    ctx.moveTo(x, 0)
-    ctx.lineTo(x, s)
-    ctx.stroke()
-  }
-  for (let y = 0; y <= s; y += step) {
-    ctx.beginPath()
-    ctx.moveTo(0, y)
-    ctx.lineTo(s, y)
-    ctx.stroke()
-  }
-
-  ctx.fillStyle = 'rgba(180, 175, 230, 0.4)'
-  for (let x = 0; x <= s; x += step) {
-    for (let y = 0; y <= s; y += step) {
-      ctx.fillRect(x - 0.5, y - 0.5, 1.4, 1.4)
-    }
-  }
-
-  const fade = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s * 0.55)
-  fade.addColorStop(0, 'rgba(2, 4, 12, 0)')
-  fade.addColorStop(0.5, 'rgba(2, 4, 12, 0.2)')
-  fade.addColorStop(1, 'rgba(2, 4, 12, 1)')
-  ctx.fillStyle = fade
-  ctx.fillRect(0, 0, s, s)
-
-  const texture = new CanvasTexture(canvas)
-  texture.colorSpace = SRGBColorSpace
-  texture.magFilter = LinearFilter
-  texture.minFilter = LinearFilter
-  return texture
-}
-
 function createBeamTexture() {
   const w = 256
   const h = 1024
@@ -190,7 +142,6 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
     () => createGlowTexture('rgba(180, 170, 255, 0.85)', 'rgba(110, 96, 230, 0.32)'),
     [],
   )
-  const gridTexture = useMemo(() => createGridTexture(), [])
   const beamTexture = useMemo(() => createBeamTexture(), [])
   const pointerRef = useRef(new Vector2(0, 0))
   const transitionRef = useRef({
@@ -587,24 +538,19 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
 
       <WaveField />
 
-      <mesh position={[0, 1.2, -4.5]}>
-        <planeGeometry args={[22, 14]} />
-        <meshBasicMaterial map={gridTexture} transparent opacity={0.5} depthWrite={false} toneMapped={false} />
-      </mesh>
-
       <mesh position={[0, 4.6, -0.4]}>
-        <planeGeometry args={[1.4, 7]} />
+        <planeGeometry args={[0.9, 5]} />
         <meshBasicMaterial
           map={beamTexture}
           transparent
-          opacity={0.55}
+          opacity={0.18}
           depthWrite={false}
           blending={AdditiveBlending}
           toneMapped={false}
         />
       </mesh>
 
-      <Stars radius={25} depth={8} count={120} factor={0.32} saturation={0} fade speed={0} />
+      <Stars radius={25} depth={8} count={80} factor={0.25} saturation={0} fade speed={0} />
     </>
   )
 }

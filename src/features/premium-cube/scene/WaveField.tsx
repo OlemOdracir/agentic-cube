@@ -7,6 +7,7 @@ import {
   CanvasTexture,
   Color,
   LinearFilter,
+  NormalBlending,
   PlaneGeometry,
   ShaderMaterial,
   SRGBColorSpace,
@@ -19,13 +20,14 @@ const VERTEX_SHADER = /* glsl */ `
   uniform float uAmp2;
   uniform float uAmp3;
   varying float vDisplacement;
+  varying float vDepth;
   varying vec2 vUv;
 
   float wave(vec2 p, float t) {
-    float a = sin(p.x * 0.42 + t * 0.45) * uAmp1;
-    float b = sin(p.y * 0.36 + t * 0.55 + 1.3) * uAmp2;
-    float c = sin((p.x + p.y) * 0.22 + t * 0.7 + 0.8) * uAmp3;
-    float d = sin((p.x * 0.13 - p.y * 0.21) + t * 0.32) * uAmp1 * 0.4;
+    float a = sin(p.x * 0.18 + t * 0.32) * uAmp1;
+    float b = sin(p.y * 0.24 + t * 0.42 + 1.3) * uAmp2;
+    float c = sin((p.x * 0.6 + p.y * 0.22) + t * 0.5 + 0.8) * uAmp3;
+    float d = sin(p.y * 0.55 + t * 0.28) * uAmp2 * 0.35;
     return a + b + c + d;
   }
 
@@ -36,22 +38,27 @@ const VERTEX_SHADER = /* glsl */ `
     pos.z += displacement;
     vDisplacement = displacement;
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+    vDepth = -mvPosition.z;
     gl_Position = projectionMatrix * mvPosition;
-    gl_PointSize = mix(1.0, 3.6, smoothstep(-0.6, 0.9, displacement)) * (320.0 / -mvPosition.z);
+    gl_PointSize = mix(0.6, 2.4, smoothstep(-0.2, 0.95, displacement)) * (220.0 / vDepth);
   }
 `
 
 const LINES_FRAGMENT = /* glsl */ `
   uniform vec3 uColor;
   varying float vDisplacement;
+  varying float vDepth;
   varying vec2 vUv;
 
   void main() {
-    float crestBoost = smoothstep(-0.4, 0.9, vDisplacement);
-    float radial = 1.0 - smoothstep(0.18, 0.78, distance(vUv, vec2(0.5, 0.42)));
-    float verticalFade = smoothstep(0.02, 0.36, vUv.y) * (1.0 - smoothstep(0.7, 1.0, vUv.y));
-    float alpha = (0.18 + crestBoost * 0.45) * radial * verticalFade;
-    gl_FragColor = vec4(uColor, alpha);
+    float peak = smoothstep(-0.05, 0.5, vDisplacement);
+    float crestBoost = peak * peak;
+    float radial = 1.0 - smoothstep(0.42, 1.05, distance(vUv, vec2(0.5, 0.5)));
+    float verticalFade = smoothstep(0.0, 0.04, vUv.y) * (1.0 - smoothstep(0.78, 1.0, vUv.y));
+    float depthFade = mix(1.0, 0.6, smoothstep(3.0, 22.0, vDepth));
+    float alpha = (0.55 + crestBoost * 0.45) * radial * verticalFade;
+    vec3 rgb = uColor * depthFade;
+    gl_FragColor = vec4(rgb, alpha);
   }
 `
 
@@ -59,16 +66,19 @@ const POINTS_FRAGMENT = /* glsl */ `
   uniform vec3 uColor;
   uniform sampler2D uMap;
   varying float vDisplacement;
+  varying float vDepth;
   varying vec2 vUv;
 
   void main() {
-    vec2 coord = gl_PointCoord;
-    vec4 sprite = texture2D(uMap, coord);
-    float crestBoost = smoothstep(-0.2, 0.9, vDisplacement);
-    float radial = 1.0 - smoothstep(0.18, 0.8, distance(vUv, vec2(0.5, 0.42)));
-    float verticalFade = smoothstep(0.02, 0.32, vUv.y) * (1.0 - smoothstep(0.74, 1.0, vUv.y));
-    float alpha = sprite.a * (0.32 + crestBoost * 0.58) * radial * verticalFade;
-    gl_FragColor = vec4(uColor, alpha);
+    vec4 sprite = texture2D(uMap, gl_PointCoord);
+    float peak = smoothstep(0.0, 0.5, vDisplacement);
+    float crestBoost = peak * peak;
+    float radial = 1.0 - smoothstep(0.42, 1.05, distance(vUv, vec2(0.5, 0.5)));
+    float verticalFade = smoothstep(0.0, 0.04, vUv.y) * (1.0 - smoothstep(0.78, 1.0, vUv.y));
+    float depthFade = mix(1.0, 0.55, smoothstep(3.0, 22.0, vDepth));
+    float alpha = sprite.a * (0.7 + crestBoost * 0.9) * radial * verticalFade;
+    vec3 rgb = uColor * depthFade;
+    gl_FragColor = vec4(rgb, alpha);
   }
 `
 
@@ -81,7 +91,7 @@ function createDotTexture() {
   if (!ctx) return null
   const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2)
   g.addColorStop(0, 'rgba(255,255,255,1)')
-  g.addColorStop(0.45, 'rgba(220,210,255,0.7)')
+  g.addColorStop(0.4, 'rgba(220,210,255,0.55)')
   g.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = g
   ctx.fillRect(0, 0, s, s)
@@ -103,12 +113,12 @@ type WaveFieldProps = {
 }
 
 export function WaveField({
-  position = [0, -1.6, -3.5],
-  rotation = [-Math.PI / 2.4, 0, 0],
-  width = 28,
-  height = 16,
-  segmentsX = 96,
-  segmentsY = 56,
+  position = [0, -1.35, -3.4],
+  rotation = [-Math.PI / 2.3, 0, 0],
+  width = 32,
+  height = 22,
+  segmentsX = 120,
+  segmentsY = 96,
   paused = false,
 }: WaveFieldProps) {
   const planeGeometry = useMemo(() => new PlaneGeometry(width, height, segmentsX, segmentsY), [width, height, segmentsX, segmentsY])
@@ -130,12 +140,12 @@ export function WaveField({
         transparent: true,
         depthWrite: false,
         wireframe: true,
-        blending: AdditiveBlending,
+        blending: NormalBlending,
         uniforms: {
           uTime: { value: 0 },
-          uAmp1: { value: 0.32 },
-          uAmp2: { value: 0.22 },
-          uAmp3: { value: 0.16 },
+          uAmp1: { value: 0.08 },
+          uAmp2: { value: 0.62 },
+          uAmp3: { value: 0.12 },
           uColor: { value: new Color('#7a6dff') },
         },
       }),
@@ -152,10 +162,10 @@ export function WaveField({
         blending: AdditiveBlending,
         uniforms: {
           uTime: { value: 0 },
-          uAmp1: { value: 0.32 },
-          uAmp2: { value: 0.22 },
-          uAmp3: { value: 0.16 },
-          uColor: { value: new Color('#c8c0ff') },
+          uAmp1: { value: 0.08 },
+          uAmp2: { value: 0.62 },
+          uAmp3: { value: 0.12 },
+          uColor: { value: new Color('#8a78ff') },
           uMap: { value: dotTexture },
         },
       }),
