@@ -12,6 +12,12 @@ const CtaSchema = z.object({
   href: z.string().min(1).optional(),
 })
 
+const LinkSchema = z.object({
+  label: z.string().min(1),
+  description: z.string().min(1).optional(),
+  href: z.string().min(1).optional(),
+})
+
 const FeatureSchema = z.object({
   glyph: FeatureGlyphSchema,
   label: z.string().min(1),
@@ -31,21 +37,21 @@ const SiteSectionSchema = z.object({
   intro: z.string().min(1).optional(),
   highlights: z.array(z.string().min(1)).optional(),
   proofPoints: z.array(z.string().min(1)).optional(),
-  links: z
-    .array(
-      z.object({
-        label: z.string().min(1),
-        description: z.string().min(1).optional(),
-        href: z.string().min(1).optional(),
-      }),
-    )
-    .optional(),
+  links: z.array(LinkSchema).optional(),
   cta: CtaSchema.optional(),
   features: z.array(FeatureSchema).optional(),
   flowTitle: z.string().min(1).optional(),
   flow: z.array(FlowStepSchema).optional(),
   ctaPrimary: CtaSchema.optional(),
   ctaSecondary: CtaSchema.optional(),
+  detail: z
+    .object({
+      title: z.string().min(1),
+      summary: z.string().min(1),
+      points: z.array(z.string().min(1)).optional(),
+      links: z.array(LinkSchema).optional(),
+    })
+    .optional(),
 })
 
 const SiteContentSchema = z.object({
@@ -173,6 +179,7 @@ export function normalizeSections(sections: SiteSection[]): CubeSection[] {
       flow: section?.flow ?? fallback.flow,
       ctaPrimary: section?.ctaPrimary ?? fallback.ctaPrimary,
       ctaSecondary: section?.ctaSecondary ?? fallback.ctaSecondary,
+      detail: section?.detail,
     }
   })
 }

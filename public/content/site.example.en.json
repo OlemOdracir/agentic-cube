@@ -34,7 +34,16 @@
         { "label": "SHIP", "description": "Deploy with monitoring, traceability, and continuous control." }
       ],
       "ctaPrimary": { "label": "EXPLORE APPROACH" },
-      "ctaSecondary": { "label": "VIEW METHODOLOGY" }
+      "ctaSecondary": { "label": "VIEW METHODOLOGY" },
+      "detail": {
+        "title": "Agentic method",
+        "summary": "A way to build products with agents without losing direction: clear purpose, hard rules, verifiable prototype, and a path toward production.",
+        "points": [
+          "The agent executes within defined technical and visual limits.",
+          "The prototype is validated as a real product, not as decoration.",
+          "Each iteration leaves traceable decisions for future development."
+        ]
+      }
     },
     {
       "id": "products",
@@ -55,7 +64,23 @@
         { "label": "PUBLISH", "description": "Open the artifact and own its evolution." }
       ],
       "ctaPrimary": { "label": "OPEN REPOSITORY", "href": "https://github.com/your-handle/your-project" },
-      "ctaSecondary": { "label": "VIEW PROJECTS" }
+      "ctaSecondary": { "label": "VIEW PROJECTS" },
+      "detail": {
+        "title": "Public products",
+        "summary": "The goal is public evidence of judgment: utility, design, maintenance, and visible evolution.",
+        "points": [
+          "Select a small number of projects that support the current direction.",
+          "Each product should have concrete utility and inspectable code.",
+          "Documentation should explain both the result and the process."
+        ],
+        "links": [
+          {
+            "label": "Main repository",
+            "description": "Replace this link with your most representative public project.",
+            "href": "https://github.com/your-handle/your-project"
+          }
+        ]
+      }
     },
     {
       "id": "systems",
@@ -76,7 +101,16 @@
         { "label": "OPERATE", "description": "Logs, metrics, traces, and clear ownership." }
       ],
       "ctaPrimary": { "label": "VIEW ARCHITECTURE" },
-      "ctaSecondary": { "label": "CASE STUDIES" }
+      "ctaSecondary": { "label": "CASE STUDIES" },
+      "detail": {
+        "title": "Production base",
+        "summary": "Agentic work needs engineering foundations: operational continuity, reliable data, clear boundaries, and reproducible deployments.",
+        "points": [
+          "Observe the real system before automating it.",
+          "Separate boundaries so change can stay incremental.",
+          "Design with monitoring and recovery from the beginning."
+        ]
+      }
     },
     {
       "id": "security",
@@ -97,7 +131,16 @@
         { "label": "RESPOND", "description": "Rotate, contain, write a clean post-mortem." }
       ],
       "ctaPrimary": { "label": "VIEW CONTROLS" },
-      "ctaSecondary": { "label": "THREAT MODEL" }
+      "ctaSecondary": { "label": "THREAT MODEL" },
+      "detail": {
+        "title": "Proportional security",
+        "summary": "Security should respond to real risk: protect administration and sensitive data without creating unnecessary friction for visitors.",
+        "points": [
+          "Use MFA for admin panels, not for public reading.",
+          "Add CAPTCHA or rate limits only when there is an abuse vector.",
+          "Secrets and private content should never live in the public repository."
+        ]
+      }
     },
     {
       "id": "research",
@@ -118,7 +161,16 @@
         { "label": "PUBLISH", "description": "Curated, never a dump." }
       ],
       "ctaPrimary": { "label": "READ PAPERS" },
-      "ctaSecondary": { "label": "OPEN NOTES" }
+      "ctaSecondary": { "label": "OPEN NOTES" },
+      "detail": {
+        "title": "Applied research",
+        "summary": "Research acts as conceptual depth: a way to think better about interfaces, systems, agents, and truth criteria.",
+        "points": [
+          "Publish curated material, not full archives without context.",
+          "Connect abstract ideas to product decisions.",
+          "Use writing as a test of clarity and structure."
+        ]
+      }
     },
     {
       "id": "contact",
@@ -138,8 +190,29 @@
         { "label": "MEET", "description": "Short call to align on fit and scope." },
         { "label": "COMMIT", "description": "Move only when both sides see the value." }
       ],
-      "ctaPrimary": { "label": "WRITE AN EMAIL" },
-      "ctaSecondary": { "label": "OPEN GITHUB", "href": "https://github.com/your-handle" }
+      "ctaPrimary": { "label": "VIEW CHANNELS" },
+      "ctaSecondary": { "label": "OPEN GITHUB", "href": "https://github.com/your-handle" },
+      "detail": {
+        "title": "Professional channels",
+        "summary": "Contact should be direct and serious: public profiles for context, code for evidence, and a form for structured messages.",
+        "points": [
+          "GitHub shows the technical process.",
+          "LinkedIn provides professional context.",
+          "The form can add validation, CAPTCHA, or rate limits when needed."
+        ],
+        "links": [
+          {
+            "label": "GitHub",
+            "description": "Replace this link with your public profile.",
+            "href": "https://github.com/your-handle"
+          },
+          {
+            "label": "Form",
+            "description": "Future route for structured contact.",
+            "href": "/contact"
+          }
+        ]
+      }
     }
   ]
 }

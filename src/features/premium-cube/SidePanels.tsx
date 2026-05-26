@@ -8,6 +8,7 @@ type SidePanelsProps = {
   locale: SiteLocale
   fullName: string
   onSelectSection: (id: CubeSectionId) => void
+  onOpenDetail: () => void
 }
 
 type GlyphProps = {
@@ -82,13 +83,37 @@ const CHEVRON = (
   </svg>
 )
 
-export function SidePanels({ activeSection, sections, locale, fullName, onSelectSection }: SidePanelsProps) {
+export function SidePanels({ activeSection, sections, locale, fullName, onOpenDetail, onSelectSection }: SidePanelsProps) {
   const eyebrowLabel = locale === 'es' ? 'INGENIERÍA DE' : 'POSITIONING'
   const titleLines = useMemo(() => splitTitleIntoTwoLines(activeSection.title), [activeSection.title])
   const flowCountLabel = useMemo(
     () => String(activeSection.flow?.length ?? 0).padStart(2, '0'),
     [activeSection.flow],
   )
+  const renderCta = (cta: CubeSection['ctaPrimary'], modifier: string) => {
+    if (!cta) return null
+
+    if (cta.href) {
+      return (
+        <a
+          className={`side-panels__cta ${modifier}`}
+          href={cta.href}
+          rel="noreferrer"
+          target={cta.href.startsWith('http') ? '_blank' : undefined}
+        >
+          <span>{cta.label}</span>
+          {CHEVRON}
+        </a>
+      )
+    }
+
+    return (
+      <button className={`side-panels__cta ${modifier}`} type="button" onClick={onOpenDetail}>
+        <span>{cta.label}</span>
+        {CHEVRON}
+      </button>
+    )
+  }
 
   return (
     <div className="side-panels">
@@ -119,17 +144,7 @@ export function SidePanels({ activeSection, sections, locale, fullName, onSelect
           </ul>
         )}
 
-        {activeSection.ctaPrimary && (
-          <a
-            className="side-panels__cta side-panels__cta--primary"
-            href={activeSection.ctaPrimary.href ?? '#'}
-            rel={activeSection.ctaPrimary.href ? 'noreferrer' : undefined}
-            target={activeSection.ctaPrimary.href?.startsWith('http') ? '_blank' : undefined}
-          >
-            <span>{activeSection.ctaPrimary.label}</span>
-            {CHEVRON}
-          </a>
-        )}
+        {renderCta(activeSection.ctaPrimary, 'side-panels__cta--primary')}
       </aside>
 
       <aside className="side-panels__rail side-panels__rail--right" key={`R-${activeSection.id}`}>
@@ -152,17 +167,7 @@ export function SidePanels({ activeSection, sections, locale, fullName, onSelect
           </ol>
         )}
 
-        {activeSection.ctaSecondary && (
-          <a
-            className="side-panels__cta side-panels__cta--secondary"
-            href={activeSection.ctaSecondary.href ?? '#'}
-            rel={activeSection.ctaSecondary.href ? 'noreferrer' : undefined}
-            target={activeSection.ctaSecondary.href?.startsWith('http') ? '_blank' : undefined}
-          >
-            <span>{activeSection.ctaSecondary.label}</span>
-            {CHEVRON}
-          </a>
-        )}
+        {renderCta(activeSection.ctaSecondary, 'side-panels__cta--secondary')}
       </aside>
 
       <nav className="side-panels__breadcrumb" aria-label="Cube sections">

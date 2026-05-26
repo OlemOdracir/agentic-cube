@@ -34,7 +34,16 @@
         { "label": "PUBLICAR", "description": "Desplegar con monitoreo, trazabilidad y control continuo." }
       ],
       "ctaPrimary": { "label": "EXPLORAR ENFOQUE" },
-      "ctaSecondary": { "label": "VER METODOLOGÍA" }
+      "ctaSecondary": { "label": "VER METODOLOGÍA" },
+      "detail": {
+        "title": "Método agéntico",
+        "summary": "Una forma de construir productos con agentes sin perder dirección: propósito claro, reglas duras, prototipo verificable y salida preparada para producción.",
+        "points": [
+          "El agente ejecuta dentro de límites técnicos y visuales definidos.",
+          "El prototipo se valida como producto real, no como maqueta decorativa.",
+          "Cada iteración deja decisiones trazables para futuros desarrollos."
+        ]
+      }
     },
     {
       "id": "products",
@@ -55,7 +64,23 @@
         { "label": "PUBLICAR", "description": "Abrir el artefacto y hacerse cargo de su evolución." }
       ],
       "ctaPrimary": { "label": "ABRIR REPOSITORIO", "href": "https://github.com/your-handle/your-project" },
-      "ctaSecondary": { "label": "VER PROYECTOS" }
+      "ctaSecondary": { "label": "VER PROYECTOS" },
+      "detail": {
+        "title": "Productos públicos",
+        "summary": "El objetivo es mostrar evidencia pública de criterio: utilidad, diseño, mantenimiento y evolución visible.",
+        "points": [
+          "Selecciona pocos proyectos que demuestren dirección actual.",
+          "Cada producto debe tener utilidad concreta y código inspeccionable.",
+          "La documentación debe explicar tanto el resultado como el proceso."
+        ],
+        "links": [
+          {
+            "label": "Repositorio principal",
+            "description": "Reemplaza este enlace con tu proyecto público más representativo.",
+            "href": "https://github.com/your-handle/your-project"
+          }
+        ]
+      }
     },
     {
       "id": "systems",
@@ -76,7 +101,16 @@
         { "label": "OPERAR", "description": "Logs, métricas, trazas y responsabilidad clara." }
       ],
       "ctaPrimary": { "label": "VER ARQUITECTURA" },
-      "ctaSecondary": { "label": "CASOS DE ESTUDIO" }
+      "ctaSecondary": { "label": "CASOS DE ESTUDIO" },
+      "detail": {
+        "title": "Base productiva",
+        "summary": "El trabajo agéntico necesita fundamentos de ingeniería: continuidad operacional, datos confiables, límites claros y despliegues reproducibles.",
+        "points": [
+          "Observar el sistema real antes de automatizarlo.",
+          "Separar límites para que el cambio sea incremental.",
+          "Diseñar con monitoreo y recuperación desde el inicio."
+        ]
+      }
     },
     {
       "id": "security",
@@ -97,7 +131,16 @@
         { "label": "RESPONDER", "description": "Rotar, contener y escribir un postmortem limpio." }
       ],
       "ctaPrimary": { "label": "VER CONTROLES" },
-      "ctaSecondary": { "label": "MODELO DE AMENAZAS" }
+      "ctaSecondary": { "label": "MODELO DE AMENAZAS" },
+      "detail": {
+        "title": "Seguridad proporcional",
+        "summary": "La seguridad debe responder al riesgo real: proteger administración y datos sensibles sin poner fricción innecesaria al visitante.",
+        "points": [
+          "MFA para paneles administrativos, no para lectura pública.",
+          "CAPTCHA o rate limit solo cuando exista un vector de abuso.",
+          "Secretos y contenido privado nunca deben vivir en el repositorio público."
+        ]
+      }
     },
     {
       "id": "research",
@@ -118,7 +161,16 @@
         { "label": "PUBLICAR", "description": "Curado, nunca volcado." }
       ],
       "ctaPrimary": { "label": "LEER PAPERS" },
-      "ctaSecondary": { "label": "ABRIR NOTAS" }
+      "ctaSecondary": { "label": "ABRIR NOTAS" },
+      "detail": {
+        "title": "Investigación aplicada",
+        "summary": "La investigación funciona como profundidad conceptual: una forma de pensar mejor interfaces, sistemas, agentes y criterios de verdad.",
+        "points": [
+          "Publica solo material curado, no archivos completos sin contexto.",
+          "Conecta ideas abstractas con decisiones de producto.",
+          "Usa la escritura como prueba de claridad y estructura."
+        ]
+      }
     },
     {
       "id": "contact",
@@ -138,8 +190,29 @@
         { "label": "REUNIR", "description": "Llamada corta para alinear ajuste y alcance." },
         { "label": "COMPROMETER", "description": "Avanzar solo cuando ambos lados ven el valor." }
       ],
-      "ctaPrimary": { "label": "ESCRIBIR EMAIL" },
-      "ctaSecondary": { "label": "ABRIR GITHUB", "href": "https://github.com/your-handle" }
+      "ctaPrimary": { "label": "VER CANALES" },
+      "ctaSecondary": { "label": "ABRIR GITHUB", "href": "https://github.com/your-handle" },
+      "detail": {
+        "title": "Canales profesionales",
+        "summary": "El contacto debe ser directo y serio: perfiles públicos para contexto, código para evidencia y formulario para mensajes estructurados.",
+        "points": [
+          "GitHub muestra el proceso técnico.",
+          "LinkedIn entrega contexto profesional.",
+          "El formulario puede agregar validación, CAPTCHA o rate limit cuando sea necesario."
+        ],
+        "links": [
+          {
+            "label": "GitHub",
+            "description": "Reemplaza este enlace con tu perfil público.",
+            "href": "https://github.com/your-handle"
+          },
+          {
+            "label": "Formulario",
+            "description": "Ruta futura para contacto estructurado.",
+            "href": "/contact"
+          }
+        ]
+      }
     }
   ]
 }

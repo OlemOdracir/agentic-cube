@@ -21,6 +21,17 @@ export type CubeSectionCta = {
   href?: string
 }
 
+export type CubeSectionDetail = {
+  title: string
+  summary: string
+  points?: string[]
+  links?: {
+    label: string
+    description?: string
+    href?: string
+  }[]
+}
+
 export type CubeSection = {
   id: CubeSectionId
   label: string
@@ -41,6 +52,7 @@ export type CubeSection = {
   flow?: CubeSectionFlowStep[]
   ctaPrimary?: CubeSectionCta
   ctaSecondary?: CubeSectionCta
+  detail?: CubeSectionDetail
 }
 
 export const CUBE_SECTIONS: CubeSection[] = [

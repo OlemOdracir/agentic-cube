@@ -39,6 +39,28 @@ Private deploy content:
 
 The private files must be gitignored.
 
+## Face Content Model
+
+The home experience is not a page. It is a single-screen scene built around the persistent cube, so each face needs two content levels:
+
+Primary scene content:
+
+- `title`: two to four strong words.
+- `summary`: one compact thesis line.
+- `features`: three or four named signals for the left rail.
+- `flowTitle`: short technical label for the right rail.
+- `flow`: four short procedural steps.
+- `ctaPrimary` and `ctaSecondary`: one opens detail, one may link outward when justified.
+
+Extended content:
+
+- `detail.title`
+- `detail.summary`
+- `detail.points`
+- `detail.links`
+
+Use `detail` for information that is useful but too dense for the main scene. Do not push long-form paragraphs into the left or right rails. The modal may hold context, external links, contact channels, methodology notes, or evidence summaries. Full essays and project archives still belong on future deep-dive routes.
+
 ## Loading Strategy
 
 For a requested language:

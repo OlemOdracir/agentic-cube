@@ -217,9 +217,11 @@ function readInitialSectionId(): CubeSectionId {
 export function PremiumCubePrototype() {
   const [cursorMode, setCursorMode] = useState<'default' | 'grab' | 'grabbing'>('default')
   const [activeSectionId, setActiveSectionId] = useState<CubeSectionId>(() => readInitialSectionId())
+  const [detailOpen, setDetailOpen] = useState(false)
   const cubeSceneRef = useRef<CubeSceneHandle | null>(null)
   const requestFaceChange = useCallback((id: CubeSectionId) => {
     if (id === activeSectionId) return
+    setDetailOpen(false)
     cubeSceneRef.current?.enterSection(id)
   }, [activeSectionId])
   const sectionPanelRef = useRef<HTMLElement | null>(null)
@@ -239,6 +241,20 @@ export function PremiumCubePrototype() {
     [activeSectionId, sections],
   )
   const activeSectionIndex = activeSection ? sections.findIndex((section) => section.id === activeSection.id) + 1 : 0
+  const activeDetail = useMemo(() => {
+    if (!activeSection) return null
+
+    if (activeSection.detail) {
+      return activeSection.detail
+    }
+
+    return {
+      title: activeSection.title,
+      summary: activeSection.intro ?? activeSection.summary,
+      points: [...(activeSection.highlights ?? []), ...(activeSection.proofPoints ?? [])],
+      links: activeSection.links,
+    }
+  }, [activeSection])
   const sectionCopy =
     locale === 'es'
       ? {
@@ -305,6 +321,24 @@ export function PremiumCubePrototype() {
   useEffect(() => {
     sectionPanelRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
   }, [activeSectionId])
+
+  useEffect(() => {
+    if (!detailOpen) {
+      return
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setDetailOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', closeOnEscape)
+
+    return () => {
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [detailOpen])
 
   useEffect(() => {
     const panel = sectionPanelRef.current
@@ -380,6 +414,7 @@ export function PremiumCubePrototype() {
               effects={effects}
               onCursorModeChange={setCursorMode}
               onSectionEnter={(sectionId) => {
+                setDetailOpen(false)
                 setActiveSectionId(sectionId)
               }}
               sectionOpen={fullscreenActive}
@@ -427,8 +462,47 @@ export function PremiumCubePrototype() {
           sections={sections}
           locale={locale}
           fullName={content.identity.fullName}
+          onOpenDetail={() => setDetailOpen(true)}
           onSelectSection={requestFaceChange}
         />
+      )}
+
+      {detailOpen && activeDetail && (
+        <div className="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title">
+          <button className="detail-modal__scrim" type="button" aria-label="Close detail" onClick={() => setDetailOpen(false)} />
+          <article className="detail-modal__panel">
+            <button className="detail-modal__close" type="button" onClick={() => setDetailOpen(false)}>
+              ×
+            </button>
+            <p className="detail-modal__eyebrow">{activeSection?.label}</p>
+            <h2 id="detail-modal-title">{activeDetail.title}</h2>
+            <p className="detail-modal__summary">{activeDetail.summary}</p>
+            {activeDetail.points && activeDetail.points.length > 0 && (
+              <ul className="detail-modal__points">
+                {activeDetail.points.map((point) => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ul>
+            )}
+            {activeDetail.links && activeDetail.links.length > 0 && (
+              <div className="detail-modal__links">
+                {activeDetail.links.map((link) =>
+                  link.href ? (
+                    <a href={link.href} key={link.label} rel="noreferrer" target="_blank">
+                      <strong>{link.label}</strong>
+                      {link.description && <span>{link.description}</span>}
+                    </a>
+                  ) : (
+                    <span key={link.label}>
+                      <strong>{link.label}</strong>
+                      {link.description && <small>{link.description}</small>}
+                    </span>
+                  ),
+                )}
+              </div>
+            )}
+          </article>
+        </div>
       )}
 
       <section className="section-panel" aria-hidden={!fullscreenActive} ref={sectionPanelRef}>
