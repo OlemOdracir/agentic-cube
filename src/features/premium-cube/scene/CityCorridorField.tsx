@@ -26,27 +26,25 @@ import {
 } from './waveFieldConfig'
 
 const FAR_Z = -28
-const NEAR_Z = 7
+// Recycle point sits behind the camera (city camera is at z≈10.8) so the
+// wrap-around happens off-screen: elements fly past and exit at the frame
+// edges instead of snapping back toward the center while still visible.
+const NEAR_Z = 13
 const DEPTH = NEAR_Z - FAR_Z
 const ROAD_ROWS = 64
 const ROAD_COLS = 19
 const BUILDING_COUNT_PER_SIDE = 18
 const TREE_COUNT_PER_SIDE = 11
 const SKYLINE_TOWER_COUNT = 13
-const SIGNAL_COUNT = 34
 const CORRIDOR_SPEED = 0.82
 const ROAD_HALF_WIDTH_FAR = 0.72
 const ROAD_HALF_WIDTH_NEAR = 2.45
 const SIDEWALK_BANDS = 3
 const LAMP_CURB_OFFSET = 0.22
 
-// Signal appearance
-const SIGNAL_COLOR = '#d0c4ff'
-const SIGNAL_SIZE_FACTOR = POINT_SIZE_FACTOR * 3.2
-
 // Lamp glow appearance
-const LAMP_GLOW_COLOR = '#b09aff'
-const LAMP_GLOW_SIZE_FACTOR = POINT_SIZE_FACTOR * 3.2
+const LAMP_GLOW_COLOR = '#f3f2f8'
+const LAMP_GLOW_SIZE_FACTOR = POINT_SIZE_FACTOR * 5.6
 
 type CityNode =
   | {
@@ -93,12 +91,6 @@ type CityNode =
       y: number
       z: number
       phase: number
-    }
-  | {
-      kind: 'signal'
-      index: number
-      laneX: number
-      speed: number
     }
 
 type LinePair = {
@@ -181,7 +173,6 @@ function buildCityGraph() {
   const pairs: LinePair[] = []
   const roadIndex: number[][] = []
   const sidewalkIndex: Record<-1 | 1, number[][]> = { '-1': [], 1: [] }
-  const signalIndices: number[] = []
   const lampHeadIndices: number[] = []
 
   for (let row = 0; row < ROAD_ROWS; row += 1) {
@@ -468,13 +459,7 @@ function buildCityGraph() {
     }
   }
 
-  for (let i = 0; i < SIGNAL_COUNT; i += 1) {
-    const laneX = [-0.74, -0.38, 0.38, 0.74][i % 4]
-    const idx = nodes.push({ kind: 'signal', index: i, laneX, speed: 1.35 + (i % 4) * 0.16 }) - 1
-    signalIndices.push(idx)
-  }
-
-  return { nodes, pairs, signalIndices, lampHeadIndices }
+  return { nodes, pairs, lampHeadIndices }
 }
 
 // ── Shaders ───────────────────────────────────────────────────────────────────
@@ -512,37 +497,6 @@ const POINTS_FRAGMENT = /* glsl */ `
   }
 `
 
-const SIGNAL_VERTEX = /* glsl */ `
-  uniform float uPixelRatio;
-  uniform float uPointSizeFactor;
-  uniform float uTime;
-  varying float vDepth;
-  varying float vPulse;
-  void main() {
-    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-    vDepth = -mvPosition.z;
-    // Use x + z as a per-signal phase so each signal pulses independently
-    vPulse = 0.5 + 0.5 * sin(uTime * 2.6 + position.x * 6.8 + position.z * 1.4);
-    gl_Position = projectionMatrix * mvPosition;
-    gl_PointSize = (uPointSizeFactor / vDepth) * uPixelRatio * (1.2 + vPulse * 1.1);
-  }
-`
-
-const SIGNAL_FRAGMENT = /* glsl */ `
-  uniform vec3 uColor;
-  uniform sampler2D uMap;
-  uniform float uDepthNear;
-  uniform float uDepthFar;
-  varying float vDepth;
-  varying float vPulse;
-  void main() {
-    vec4 sprite = texture2D(uMap, gl_PointCoord);
-    float depthFade = mix(1.0, 0.04, smoothstep(uDepthNear, uDepthFar, vDepth));
-    float alpha = sprite.a * (0.52 + vPulse * 0.58) * depthFade;
-    gl_FragColor = vec4(uColor * (0.82 + vPulse * 0.38), alpha);
-  }
-`
-
 const GLOW_VERTEX = /* glsl */ `
   uniform float uPixelRatio;
   uniform float uPointSizeFactor;
@@ -565,7 +519,7 @@ const GLOW_FRAGMENT = /* glsl */ `
     vec4 sprite = texture2D(uMap, gl_PointCoord);
     float depthFade = mix(1.0, 0.02, smoothstep(uDepthNear, uDepthFar, vDepth));
     float nearFade = smoothstep(1.2, 3.5, vDepth);
-    float alpha = sprite.a * 0.18 * depthFade * nearFade;
+    float alpha = sprite.a * 0.3 * depthFade * nearFade;
     gl_FragColor = vec4(uColor, alpha);
   }
 `
@@ -585,12 +539,6 @@ export function CityCorridorField() {
     geometry.setAttribute('color', new BufferAttribute(new Float32Array(graph.pairs.length * 2 * 3), 3))
     return geometry
   }, [graph.pairs.length])
-
-  const signalGeometry = useMemo(() => {
-    const geometry = new BufferGeometry()
-    geometry.setAttribute('position', new BufferAttribute(new Float32Array(graph.signalIndices.length * 3), 3))
-    return geometry
-  }, [graph.signalIndices.length])
 
   const glowGeometry = useMemo(() => {
     const geometry = new BufferGeometry()
@@ -618,27 +566,6 @@ export function CityCorridorField() {
           uAlphaCrest: { value: POINT_ALPHA_CREST * 0.9 },
           uDepthNear: { value: DEPTH_FADE_NEAR },
           uDepthFar: { value: DEPTH_FADE_FAR + 8 },
-        },
-      }),
-    [dotTexture],
-  )
-
-  const signalMaterial = useMemo(
-    () =>
-      new ShaderMaterial({
-        vertexShader: SIGNAL_VERTEX,
-        fragmentShader: SIGNAL_FRAGMENT,
-        transparent: true,
-        depthWrite: false,
-        blending: AdditiveBlending,
-        uniforms: {
-          uColor: { value: new Color(SIGNAL_COLOR) },
-          uMap: { value: dotTexture },
-          uPixelRatio: { value: Math.min(window.devicePixelRatio ?? 1, 2) },
-          uPointSizeFactor: { value: SIGNAL_SIZE_FACTOR },
-          uDepthNear: { value: DEPTH_FADE_NEAR },
-          uDepthFar: { value: DEPTH_FADE_FAR + 8 },
-          uTime: { value: 0 },
         },
       }),
     [dotTexture],
@@ -678,20 +605,16 @@ export function CityCorridorField() {
 
   const pointsRef = useRef<Points>(null)
   const linesRef = useRef<LineSegments>(null)
-  const signalRef = useRef<Points>(null)
   const glowRef = useRef<Points>(null)
   const nodePositions = useMemo(() => new Float32Array(graph.nodes.length * 3), [graph.nodes.length])
 
   useFrame(({ clock }) => {
     const points = pointsRef.current
     const lines = linesRef.current
-    const signalPoints = signalRef.current
     const glowPoints = glowRef.current
-    if (!points || !lines || !signalPoints || !glowPoints) return
+    if (!points || !lines || !glowPoints) return
 
     const t = clock.getElapsedTime()
-    const signalMat = signalPoints.material as ShaderMaterial
-    signalMat.uniforms.uTime.value = t
 
     graph.nodes.forEach((node, index) => {
       const base = index * 3
@@ -746,30 +669,12 @@ export function CityCorridorField() {
         nodePositions[base] = node.x + shimmer
         nodePositions[base + 1] = node.y
         nodePositions[base + 2] = node.z
-      } else {
-        const z = wrapDepth(FAR_Z + (node.index / SIGNAL_COUNT) * DEPTH + t * node.speed)
-        const near = (z - FAR_Z) / DEPTH
-        const shimmer = Math.sin(t * 1.2 + node.index * 1.7) * 0.035
-        nodePositions[base] = node.laneX * (roadHalfWidth(near) / ROAD_HALF_WIDTH_NEAR) * lateralScale(near) + shimmer
-        nodePositions[base + 1] = -0.9
-        nodePositions[base + 2] = z
       }
     })
 
     const pointPositions = points.geometry.attributes.position as BufferAttribute
     ;(pointPositions.array as Float32Array).set(nodePositions)
     pointPositions.needsUpdate = true
-
-    // Copy signal node positions into dedicated signal geometry
-    const signalPositionAttr = signalPoints.geometry.attributes.position as BufferAttribute
-    const signalArr = signalPositionAttr.array as Float32Array
-    for (let s = 0; s < graph.signalIndices.length; s += 1) {
-      const srcBase = graph.signalIndices[s] * 3
-      signalArr[s * 3] = nodePositions[srcBase]
-      signalArr[s * 3 + 1] = nodePositions[srcBase + 1]
-      signalArr[s * 3 + 2] = nodePositions[srcBase + 2]
-    }
-    signalPositionAttr.needsUpdate = true
 
     // Copy lamp head positions into glow geometry
     const glowPositionAttr = glowPoints.geometry.attributes.position as BufferAttribute
@@ -829,7 +734,6 @@ export function CityCorridorField() {
       <CameraLookAt />
       <points ref={pointsRef} geometry={pointGeometry} material={pointMaterial} />
       <lineSegments ref={linesRef} geometry={lineGeometry} material={lineMaterial} />
-      <points ref={signalRef} geometry={signalGeometry} material={signalMaterial} />
       <points ref={glowRef} geometry={glowGeometry} material={glowMaterial} />
     </>
   )
