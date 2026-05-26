@@ -14,27 +14,32 @@ import {
 import type { Group, LineSegments, Points } from 'three'
 
 // Ajustables ----------------------------------------------------
-const PARTICLE_COUNT = 560
-const FIELD_WIDTH = 30
-const FIELD_DEPTH = 18
-const WAVE_AMP_Y = 0.7
-const WAVE_AMP_X = 0.18
-const WAVE_AMP_DIAG = 0.22
-const WAVE_TIME_SCALE = 0.5
-const LINE_DISTANCE = 1.7
-const MAX_LINE_SEGMENTS = 7000
+const PARTICLE_COLS = 60
+const PARTICLE_ROWS = 36
+const PARTICLE_COUNT = PARTICLE_COLS * PARTICLE_ROWS
+const FIELD_WIDTH = 32
+const FIELD_DEPTH = 28
+const JITTER_RATIO = 0.32 // 0..1 fraction of cell size
+const WAVE_TIME_SCALE = 0.45
+const LINE_DISTANCE_RATIO = 1.85 // multiplied by avg cell size
+const NEIGHBOR_RADIUS_CELLS = 2 // grid cells to scan per particle
+const MAX_LINE_SEGMENTS = 16000
 const PARTICLE_COLOR = '#9d7bff'
 const LINE_COLOR_RGB: [number, number, number] = [0x74 / 255, 0x45 / 255, 0xff / 255]
+const HORIZON_GLOW_COLOR = '#7956ff'
 // ---------------------------------------------------------------
 
 const POINTS_VERTEX = /* glsl */ `
   uniform float uPixelRatio;
   varying float vDepth;
+  varying float vHeight;
   void main() {
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
     vDepth = -mvPosition.z;
+    vHeight = position.z;
+    float crestBoost = smoothstep(-0.2, 0.85, vHeight);
     gl_Position = projectionMatrix * mvPosition;
-    gl_PointSize = (170.0 / vDepth) * uPixelRatio;
+    gl_PointSize = (150.0 / vDepth) * uPixelRatio * (0.6 + crestBoost * 0.9);
   }
 `
 
@@ -42,11 +47,15 @@ const POINTS_FRAGMENT = /* glsl */ `
   uniform vec3 uColor;
   uniform sampler2D uMap;
   varying float vDepth;
+  varying float vHeight;
   void main() {
     vec4 sprite = texture2D(uMap, gl_PointCoord);
-    float depthFade = mix(1.0, 0.55, smoothstep(3.0, 24.0, vDepth));
-    float alpha = sprite.a * 1.05 * depthFade;
-    gl_FragColor = vec4(uColor * depthFade * 1.15, alpha);
+    float depthFade = mix(1.0, 0.05, smoothstep(4.0, 20.0, vDepth));
+    float crestBoost = smoothstep(-0.2, 0.85, vHeight);
+    float colorBoost = 0.55 + crestBoost * 0.8;
+    float alpha = sprite.a * (0.5 + crestBoost * 0.55) * depthFade;
+    vec3 rgb = uColor * colorBoost * (0.45 + 0.55 * depthFade);
+    gl_FragColor = vec4(rgb, alpha);
   }
 `
 
@@ -59,7 +68,7 @@ function createDotTexture() {
   if (!ctx) return null
   const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2)
   g.addColorStop(0, 'rgba(255,255,255,1)')
-  g.addColorStop(0.32, 'rgba(220,210,255,0.55)')
+  g.addColorStop(0.34, 'rgba(220,210,255,0.55)')
   g.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = g
   ctx.fillRect(0, 0, s, s)
@@ -70,10 +79,26 @@ function createDotTexture() {
   return t
 }
 
-type WaveFieldProps = {
-  position?: [number, number, number]
-  rotation?: [number, number, number]
-  paused?: boolean
+function createHorizonGlowTexture(color: string) {
+  const w = 1024
+  const h = 256
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return null
+  const g = ctx.createRadialGradient(w / 2, h * 0.95, 0, w / 2, h * 0.95, w * 0.55)
+  g.addColorStop(0, color)
+  g.addColorStop(0.18, `${color}66`)
+  g.addColorStop(0.5, `${color}22`)
+  g.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, w, h)
+  const t = new CanvasTexture(canvas)
+  t.colorSpace = SRGBColorSpace
+  t.magFilter = LinearFilter
+  t.minFilter = LinearFilter
+  return t
 }
 
 function makeSeededRandom(seed: number) {
@@ -85,11 +110,20 @@ function makeSeededRandom(seed: number) {
 }
 
 function waveDisplacement(x: number, y: number, t: number) {
-  const a = Math.sin(x * 0.18 + t * 0.32 * WAVE_TIME_SCALE) * WAVE_AMP_X
-  const b = Math.sin(y * 0.24 + t * 0.42 * WAVE_TIME_SCALE + 1.3) * WAVE_AMP_Y
-  const c = Math.sin(x * 0.6 + y * 0.22 + t * 0.5 * WAVE_TIME_SCALE + 0.8) * WAVE_AMP_DIAG
-  const d = Math.sin(y * 0.55 + t * 0.28 * WAVE_TIME_SCALE) * WAVE_AMP_Y * 0.3
-  return a + b + c + d
+  const tt = t * WAVE_TIME_SCALE
+  const swell =
+    Math.sin(x * 0.18 + tt * 0.7) * 0.42 +
+    Math.sin(y * 0.22 + tt * 0.85 + 1.3) * 0.52
+  const cross = Math.sin(x * 0.42 + y * 0.31 + tt * 1.1 + 0.8) * 0.22
+  const chop = Math.sin(x * 0.9 + tt * 1.4) * 0.12 + Math.sin(y * 1.05 + tt * 1.25 + 2.1) * 0.12
+  const fine = Math.sin((x + y) * 1.6 + tt * 1.8) * 0.06
+  return swell + cross + chop + fine
+}
+
+type WaveFieldProps = {
+  position?: [number, number, number]
+  rotation?: [number, number, number]
+  paused?: boolean
 }
 
 export function WaveField({
@@ -97,26 +131,26 @@ export function WaveField({
   rotation = [-Math.PI / 2.35, 0, 0],
   paused = false,
 }: WaveFieldProps) {
+  const stepX = FIELD_WIDTH / (PARTICLE_COLS - 1)
+  const stepY = FIELD_DEPTH / (PARTICLE_ROWS - 1)
+  const cellSize = (stepX + stepY) * 0.5
+  const lineDistance = cellSize * LINE_DISTANCE_RATIO
+  const lineDistanceSq = lineDistance * lineDistance
+  const invLineDistance = 1 / lineDistance
+
   const baseXY = useMemo(() => {
     const arr = new Float32Array(PARTICLE_COUNT * 2)
-    const cols = Math.round(Math.sqrt((PARTICLE_COUNT * FIELD_WIDTH) / FIELD_DEPTH))
-    const rows = Math.ceil(PARTICLE_COUNT / cols)
-    const stepX = FIELD_WIDTH / (cols - 1)
-    const stepY = FIELD_DEPTH / (rows - 1)
-    const jitter = Math.min(stepX, stepY) * 0.4
     const rand = makeSeededRandom(0xc0ffee)
-    let idx = 0
-    for (let r = 0; r < rows; r += 1) {
-      for (let c = 0; c < cols && idx < PARTICLE_COUNT; c += 1) {
-        const x = -FIELD_WIDTH / 2 + c * stepX + (rand() - 0.5) * jitter
-        const y = -FIELD_DEPTH / 2 + r * stepY + (rand() - 0.5) * jitter
-        arr[idx * 2] = x
-        arr[idx * 2 + 1] = y
-        idx += 1
+    const jitter = cellSize * JITTER_RATIO
+    for (let r = 0; r < PARTICLE_ROWS; r += 1) {
+      for (let c = 0; c < PARTICLE_COLS; c += 1) {
+        const idx = r * PARTICLE_COLS + c
+        arr[idx * 2] = -FIELD_WIDTH / 2 + c * stepX + (rand() - 0.5) * jitter
+        arr[idx * 2 + 1] = -FIELD_DEPTH / 2 + r * stepY + (rand() - 0.5) * jitter
       }
     }
     return arr
-  }, [])
+  }, [cellSize, stepX, stepY])
 
   const particleGeometry = useMemo(() => {
     const geo = new BufferGeometry()
@@ -132,15 +166,14 @@ export function WaveField({
 
   const lineGeometry = useMemo(() => {
     const geo = new BufferGeometry()
-    const linePositions = new Float32Array(MAX_LINE_SEGMENTS * 2 * 3)
-    const lineColors = new Float32Array(MAX_LINE_SEGMENTS * 2 * 3)
-    geo.setAttribute('position', new BufferAttribute(linePositions, 3))
-    geo.setAttribute('color', new BufferAttribute(lineColors, 3))
+    geo.setAttribute('position', new BufferAttribute(new Float32Array(MAX_LINE_SEGMENTS * 2 * 3), 3))
+    geo.setAttribute('color', new BufferAttribute(new Float32Array(MAX_LINE_SEGMENTS * 2 * 3), 3))
     geo.setDrawRange(0, 0)
     return geo
   }, [])
 
   const dotTexture = useMemo(() => createDotTexture(), [])
+  const horizonGlowTexture = useMemo(() => createHorizonGlowTexture(HORIZON_GLOW_COLOR), [])
 
   const pointMaterial = useMemo(
     () =>
@@ -195,44 +228,58 @@ export function WaveField({
     const lineColorAttr = linesObj.geometry.attributes.color as BufferAttribute
     const linePositions = linePositionAttr.array as Float32Array
     const lineColors = lineColorAttr.array as Float32Array
-    const thresholdSq = LINE_DISTANCE * LINE_DISTANCE
-    const inv = 1 / LINE_DISTANCE
+    const horizonStart = PARTICLE_ROWS * 0.45
+    const horizonRange = PARTICLE_ROWS - horizonStart
     let segIdx = 0
 
-    for (let i = 0; i < PARTICLE_COUNT; i += 1) {
-      const xi = positions[i * 3]
-      const yi = positions[i * 3 + 1]
-      const zi = positions[i * 3 + 2]
-      for (let j = i + 1; j < PARTICLE_COUNT; j += 1) {
-        const dx = xi - positions[j * 3]
-        const dy = yi - positions[j * 3 + 1]
-        const dz = zi - positions[j * 3 + 2]
-        const d2 = dx * dx + dy * dy + dz * dz
-        if (d2 < thresholdSq) {
-          if (segIdx >= MAX_LINE_SEGMENTS) break
-          const dist = Math.sqrt(d2)
-          const fade = 1 - dist * inv
-          const intensity = 0.35 + fade * 0.85
-          const r = LINE_COLOR_RGB[0] * intensity
-          const g = LINE_COLOR_RGB[1] * intensity
-          const b = LINE_COLOR_RGB[2] * intensity
-          const pIdx = segIdx * 6
-          linePositions[pIdx] = xi
-          linePositions[pIdx + 1] = yi
-          linePositions[pIdx + 2] = zi
-          linePositions[pIdx + 3] = positions[j * 3]
-          linePositions[pIdx + 4] = positions[j * 3 + 1]
-          linePositions[pIdx + 5] = positions[j * 3 + 2]
-          lineColors[pIdx] = r
-          lineColors[pIdx + 1] = g
-          lineColors[pIdx + 2] = b
-          lineColors[pIdx + 3] = r
-          lineColors[pIdx + 4] = g
-          lineColors[pIdx + 5] = b
-          segIdx += 1
+    outer: for (let r = 0; r < PARTICLE_ROWS; r += 1) {
+      for (let c = 0; c < PARTICLE_COLS; c += 1) {
+        const i = r * PARTICLE_COLS + c
+        const xi = positions[i * 3]
+        const yi = positions[i * 3 + 1]
+        const zi = positions[i * 3 + 2]
+        for (let dr = 0; dr <= NEIGHBOR_RADIUS_CELLS; dr += 1) {
+          const minDc = dr === 0 ? 1 : -NEIGHBOR_RADIUS_CELLS
+          for (let dc = minDc; dc <= NEIGHBOR_RADIUS_CELLS; dc += 1) {
+            const nr = r + dr
+            const nc = c + dc
+            if (nr >= PARTICLE_ROWS || nc < 0 || nc >= PARTICLE_COLS) continue
+            const j = nr * PARTICLE_COLS + nc
+            const dx = xi - positions[j * 3]
+            const dy = yi - positions[j * 3 + 1]
+            const dz = zi - positions[j * 3 + 2]
+            const d2 = dx * dx + dy * dy + dz * dz
+            if (d2 < lineDistanceSq) {
+              if (segIdx >= MAX_LINE_SEGMENTS) break outer
+              const dist = Math.sqrt(d2)
+              const fade = 1 - dist * invLineDistance
+              const avgRow = (r + nr) * 0.5
+              const horizonFade =
+                avgRow <= horizonStart ? 1 : Math.max(0, 1 - (avgRow - horizonStart) / horizonRange)
+              const avgHeight = (zi + positions[j * 3 + 2]) * 0.5
+              const crestBoost = Math.max(0, Math.min(1, (avgHeight + 0.2) / 1.05))
+              const intensity = (0.45 + fade * 0.55) * (0.35 + crestBoost * 0.85) * (0.25 + horizonFade * 0.95)
+              const r0 = LINE_COLOR_RGB[0] * intensity
+              const g0 = LINE_COLOR_RGB[1] * intensity
+              const b0 = LINE_COLOR_RGB[2] * intensity
+              const pIdx = segIdx * 6
+              linePositions[pIdx] = xi
+              linePositions[pIdx + 1] = yi
+              linePositions[pIdx + 2] = zi
+              linePositions[pIdx + 3] = positions[j * 3]
+              linePositions[pIdx + 4] = positions[j * 3 + 1]
+              linePositions[pIdx + 5] = positions[j * 3 + 2]
+              lineColors[pIdx] = r0
+              lineColors[pIdx + 1] = g0
+              lineColors[pIdx + 2] = b0
+              lineColors[pIdx + 3] = r0
+              lineColors[pIdx + 4] = g0
+              lineColors[pIdx + 5] = b0
+              segIdx += 1
+            }
+          }
         }
       }
-      if (segIdx >= MAX_LINE_SEGMENTS) break
     }
 
     linesObj.geometry.setDrawRange(0, segIdx * 2)
@@ -241,8 +288,8 @@ export function WaveField({
 
     const group = groupRef.current
     if (group) {
-      const parallaxX = pointer.x * 0.04
-      const parallaxY = pointer.y * 0.03
+      const parallaxX = pointer.x * 0.035
+      const parallaxY = pointer.y * 0.025
       group.rotation.z = parallaxX
       group.position.x = position[0] + parallaxX * 0.6
       group.position.z = position[2] - parallaxY * 0.4
@@ -251,6 +298,19 @@ export function WaveField({
 
   return (
     <group ref={groupRef} position={position} rotation={rotation}>
+      {/* Horizon backlight glow — soft violet aura behind the far edge of the field */}
+      <mesh position={[0, FIELD_DEPTH * 0.42, -0.4]} rotation={[Math.PI / 2.1, 0, 0]}>
+        <planeGeometry args={[FIELD_WIDTH * 0.7, FIELD_DEPTH * 0.32]} />
+        <meshBasicMaterial
+          map={horizonGlowTexture}
+          transparent
+          opacity={0.2}
+          depthWrite={false}
+          blending={AdditiveBlending}
+          toneMapped={false}
+        />
+      </mesh>
+
       <points ref={pointsRef} geometry={particleGeometry} material={pointMaterial} />
       <lineSegments ref={linesRef} geometry={lineGeometry} material={lineMaterial} />
     </group>
