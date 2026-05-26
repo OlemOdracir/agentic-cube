@@ -4,118 +4,45 @@ import { useMemo } from 'react'
 import { AdditiveBlending, CanvasTexture, Color, LinearFilter, LinearMipmapLinearFilter, SRGBColorSpace } from 'three'
 import type { Mesh, MeshBasicMaterial } from 'three'
 import type { CubeSection } from '../cubeSections'
-import type { CubeSectionId } from '../cubeSections'
 
-const FACE_ACCENTS: Record<CubeSectionId, string> = {
-  agentic: 'rgba(150, 146, 255, 0.92)',
-  products: 'rgba(168, 138, 255, 0.9)',
-  systems: 'rgba(176, 205, 255, 0.9)',
-  security: 'rgba(124, 217, 226, 0.88)',
-  research: 'rgba(190, 164, 255, 0.92)',
-  contact: 'rgba(202, 190, 255, 0.9)',
-}
+const FACE_ACCENT = 'rgba(140, 130, 255, 0.94)'
+const FACE_ACCENT_SOFT = 'rgba(170, 160, 255, 0.6)'
 
-function drawFaceGlyph(ctx: CanvasRenderingContext2D, sectionId: CubeSectionId, x: number, y: number) {
-  const accent = FACE_ACCENTS[sectionId]
-
+function drawDiamondGlyph(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
   ctx.save()
   ctx.translate(x, y)
-  ctx.strokeStyle = accent
-  ctx.fillStyle = accent
-  ctx.lineWidth = 7
-  ctx.lineCap = 'round'
-  ctx.lineJoin = 'round'
-  ctx.shadowBlur = 28
-  ctx.shadowColor = accent
 
-  ctx.save()
-  ctx.rotate(Math.PI / 4)
-  ctx.strokeStyle = 'rgba(228, 239, 248, 0.82)'
-  ctx.strokeRect(-74, -74, 148, 148)
-  ctx.strokeStyle = accent
-  ctx.globalAlpha = 0.82
-  ctx.strokeRect(-44, -44, 88, 88)
-  ctx.restore()
+  ctx.shadowBlur = size * 1.2
+  ctx.shadowColor = FACE_ACCENT
 
-  ctx.globalAlpha = 0.92
+  ctx.strokeStyle = FACE_ACCENT
+  ctx.lineWidth = Math.max(2, size * 0.06)
+  ctx.lineJoin = 'miter'
+  ctx.beginPath()
+  ctx.moveTo(0, -size)
+  ctx.lineTo(size, 0)
+  ctx.lineTo(0, size)
+  ctx.lineTo(-size, 0)
+  ctx.closePath()
+  ctx.stroke()
 
-  if (sectionId === 'agentic') {
-    ctx.beginPath()
-    ctx.moveTo(-94, 0)
-    ctx.lineTo(94, 0)
-    ctx.moveTo(0, -94)
-    ctx.lineTo(0, 94)
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.arc(0, 0, 8, 0, Math.PI * 2)
-    ctx.fill()
-  }
+  ctx.shadowBlur = size * 1.6
+  ctx.shadowColor = 'rgba(220, 220, 255, 0.9)'
+  ctx.fillStyle = 'rgba(245, 244, 255, 0.96)'
+  ctx.beginPath()
+  ctx.arc(0, 0, size * 0.18, 0, Math.PI * 2)
+  ctx.fill()
 
-  if (sectionId === 'products') {
-    ctx.strokeRect(-58, -42, 116, 84)
-    ctx.beginPath()
-    ctx.moveTo(-36, -16)
-    ctx.lineTo(32, -16)
-    ctx.moveTo(-36, 14)
-    ctx.lineTo(18, 14)
-    ctx.stroke()
-  }
-
-  if (sectionId === 'systems') {
-    ctx.beginPath()
-    ctx.arc(-46, -28, 20, 0, Math.PI * 2)
-    ctx.arc(48, 30, 20, 0, Math.PI * 2)
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.moveTo(-28, -16)
-    ctx.lineTo(30, 18)
-    ctx.moveTo(0, -62)
-    ctx.lineTo(0, 62)
-    ctx.stroke()
-  }
-
-  if (sectionId === 'security') {
-    ctx.beginPath()
-    ctx.moveTo(0, -62)
-    ctx.lineTo(54, -36)
-    ctx.lineTo(54, 14)
-    ctx.quadraticCurveTo(54, 52, 0, 70)
-    ctx.quadraticCurveTo(-54, 52, -54, 14)
-    ctx.lineTo(-54, -36)
-    ctx.closePath()
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.moveTo(-24, 4)
-    ctx.lineTo(-6, 22)
-    ctx.lineTo(30, -28)
-    ctx.stroke()
-  }
-
-  if (sectionId === 'research') {
-    ctx.beginPath()
-    ctx.moveTo(-58, 34)
-    ctx.bezierCurveTo(-28, -58, 28, -58, 58, 34)
-    ctx.moveTo(-58, -28)
-    ctx.bezierCurveTo(-22, 8, 22, 8, 58, -28)
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.arc(0, 0, 13, 0, Math.PI * 2)
-    ctx.stroke()
-  }
-
-  if (sectionId === 'contact') {
-    ctx.strokeRect(-60, -38, 120, 76)
-    ctx.beginPath()
-    ctx.moveTo(-56, -34)
-    ctx.lineTo(0, 12)
-    ctx.lineTo(56, -34)
-    ctx.stroke()
-  }
+  ctx.shadowBlur = 0
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)'
+  ctx.beginPath()
+  ctx.arc(0, 0, size * 0.08, 0, Math.PI * 2)
+  ctx.fill()
 
   ctx.restore()
 }
 
-function createFaceTexture(section: CubeSection, index: number) {
+function createFaceTexture(section: CubeSection) {
   const size = 1536
   const canvas = document.createElement('canvas')
   canvas.width = size
@@ -128,47 +55,96 @@ function createFaceTexture(section: CubeSection, index: number) {
 
   ctx.clearRect(0, 0, size, size)
 
-  const glow = ctx.createRadialGradient(size * 0.52, size * 0.42, 0, size * 0.52, size * 0.42, size * 0.58)
-  glow.addColorStop(0, 'rgba(154, 146, 255, 0.28)')
-  glow.addColorStop(0.34, 'rgba(36, 42, 88, 0.16)')
-  glow.addColorStop(1, 'rgba(0, 0, 0, 0)')
-  ctx.fillStyle = glow
+  const outerInset = 110
+  const innerInset = 200
+  const innerW = size - innerInset * 2
+  const innerH = size - innerInset * 2
+  const bracketLen = 90
+
+  const baseShade = ctx.createLinearGradient(0, 0, 0, size)
+  baseShade.addColorStop(0, 'rgba(20, 22, 50, 0.28)')
+  baseShade.addColorStop(0.5, 'rgba(6, 8, 22, 0.1)')
+  baseShade.addColorStop(1, 'rgba(2, 3, 10, 0.22)')
+  ctx.fillStyle = baseShade
   ctx.fillRect(0, 0, size, size)
 
-  ctx.strokeStyle = 'rgba(218, 226, 255, 0.46)'
-  ctx.lineWidth = 5
-  ctx.strokeRect(62, 62, size - 124, size - 124)
-  ctx.strokeStyle = 'rgba(132, 123, 255, 0.38)'
-  ctx.lineWidth = 3
-  ctx.strokeRect(88, 88, size - 176, size - 176)
-
-  const bevelShade = ctx.createLinearGradient(0, 0, size, size)
-  bevelShade.addColorStop(0, 'rgba(255, 255, 255, 0.1)')
-  bevelShade.addColorStop(0.28, 'rgba(255, 255, 255, 0)')
-  bevelShade.addColorStop(0.7, 'rgba(0, 0, 0, 0)')
-  bevelShade.addColorStop(1, 'rgba(0, 0, 0, 0.38)')
-  ctx.fillStyle = bevelShade
-  ctx.fillRect(62, 62, size - 124, size - 124)
-
-  drawFaceGlyph(ctx, section.id, size * 0.5, size * 0.42)
-
-  ctx.strokeStyle = 'rgba(154, 146, 255, 0.32)'
-  ctx.lineWidth = 3
+  ctx.save()
   ctx.beginPath()
-  ctx.moveTo(size * 0.24, size * 0.58)
-  ctx.lineTo(size * 0.76, size * 0.58)
+  ctx.moveTo(outerInset, outerInset + bracketLen)
+  ctx.lineTo(outerInset, outerInset)
+  ctx.lineTo(outerInset + bracketLen, outerInset)
+  ctx.moveTo(size - outerInset - bracketLen, outerInset)
+  ctx.lineTo(size - outerInset, outerInset)
+  ctx.lineTo(size - outerInset, outerInset + bracketLen)
+  ctx.moveTo(outerInset, size - outerInset - bracketLen)
+  ctx.lineTo(outerInset, size - outerInset)
+  ctx.lineTo(outerInset + bracketLen, size - outerInset)
+  ctx.moveTo(size - outerInset - bracketLen, size - outerInset)
+  ctx.lineTo(size - outerInset, size - outerInset)
+  ctx.lineTo(size - outerInset, size - outerInset - bracketLen)
+  ctx.strokeStyle = 'rgba(170, 165, 220, 0.32)'
+  ctx.lineWidth = 2.5
   ctx.stroke()
+  ctx.restore()
 
-  ctx.fillStyle = 'rgba(224, 232, 255, 0.94)'
-  ctx.font = '600 68px Inter, Arial, sans-serif'
+  const innerShadow = ctx.createLinearGradient(0, innerInset, 0, size - innerInset)
+  innerShadow.addColorStop(0, 'rgba(0, 0, 4, 0.32)')
+  innerShadow.addColorStop(0.22, 'rgba(0, 0, 4, 0.06)')
+  innerShadow.addColorStop(0.6, 'rgba(0, 0, 4, 0)')
+  innerShadow.addColorStop(1, 'rgba(0, 0, 4, 0.22)')
+  ctx.fillStyle = innerShadow
+  ctx.fillRect(innerInset, innerInset, innerW, innerH)
+
+  ctx.strokeStyle = 'rgba(0, 0, 6, 0.6)'
+  ctx.lineWidth = 3
+  ctx.strokeRect(innerInset, innerInset, innerW, innerH)
+  ctx.strokeStyle = 'rgba(190, 185, 235, 0.38)'
+  ctx.lineWidth = 1.2
+  ctx.strokeRect(innerInset - 2, innerInset - 2, innerW + 4, innerH + 4)
+
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(innerInset, innerInset, innerW, 18)
+  const topBevel = ctx.createLinearGradient(0, innerInset, 0, innerInset + 18)
+  topBevel.addColorStop(0, 'rgba(230, 230, 255, 0.28)')
+  topBevel.addColorStop(1, 'rgba(230, 230, 255, 0)')
+  ctx.fillStyle = topBevel
+  ctx.fill()
+  ctx.restore()
+
+  const innerGlow = ctx.createRadialGradient(size * 0.5, size * 0.42, 0, size * 0.5, size * 0.5, size * 0.46)
+  innerGlow.addColorStop(0, 'rgba(140, 130, 255, 0.24)')
+  innerGlow.addColorStop(0.46, 'rgba(60, 50, 140, 0.08)')
+  innerGlow.addColorStop(1, 'rgba(0, 0, 0, 0)')
+  ctx.fillStyle = innerGlow
+  ctx.fillRect(innerInset, innerInset, innerW, innerH)
+
+  drawDiamondGlyph(ctx, size * 0.5, size * 0.38, 150)
+
+  ctx.fillStyle = 'rgba(244, 245, 255, 0.98)'
+  ctx.font = '300 116px "Inter", "Helvetica Neue", Arial, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.letterSpacing = '20px'
-  ctx.fillText(section.label, size * 0.5, size * 0.68)
+  ctx.letterSpacing = '28px'
+  ctx.shadowBlur = 28
+  ctx.shadowColor = 'rgba(140, 130, 255, 0.5)'
+  ctx.fillText(section.label, size * 0.5, size * 0.6)
 
-  ctx.fillStyle = 'rgba(170, 176, 255, 0.72)'
-  ctx.font = '500 26px Inter, Arial, sans-serif'
-  ctx.fillText(`FACE 0${index + 1}`, size * 0.5, size * 0.77)
+  ctx.shadowBlur = 0
+  ctx.fillStyle = 'rgba(220, 218, 250, 0.78)'
+  ctx.font = '300 58px "Inter", "Helvetica Neue", Arial, sans-serif'
+  ctx.letterSpacing = '20px'
+  ctx.fillText('OBSIDIAN CUBE', size * 0.5, size * 0.69)
+
+  ctx.fillStyle = FACE_ACCENT_SOFT
+  const dotY = size * 0.78
+  const dotR = 8
+  const dotGap = 40
+  for (let i = -1; i <= 1; i += 1) {
+    ctx.beginPath()
+    ctx.arc(size * 0.5 + i * dotGap, dotY, dotR, 0, Math.PI * 2)
+    ctx.fill()
+  }
 
   const texture = new CanvasTexture(canvas)
   texture.colorSpace = SRGBColorSpace
@@ -300,30 +276,30 @@ export function PremiumCube({ animateGlints, sections, shadows }: PremiumCubePro
 
   return (
     <group>
-      <RoundedBox args={[2.18, 2.18, 2.18]} radius={0.105} smoothness={9} castShadow={shadows} receiveShadow={shadows}>
+      <RoundedBox args={[2.18, 2.18, 2.18]} radius={0.1} smoothness={10} castShadow={shadows} receiveShadow={shadows}>
         <meshPhysicalMaterial
-          color={new Color('#02040a')}
-          metalness={0.94}
-          roughness={0.068}
+          color={new Color('#010208')}
+          metalness={0.92}
+          roughness={0.13}
           clearcoat={1}
-          clearcoatRoughness={0.038}
-          emissive={new Color('#030614')}
-          emissiveIntensity={0.18}
-          envMapIntensity={0.54}
-          reflectivity={0.96}
-          transmission={0.035}
-          thickness={0.28}
-          ior={1.54}
+          clearcoatRoughness={0.05}
+          emissive={new Color('#020410')}
+          emissiveIntensity={0.1}
+          envMapIntensity={0.95}
+          reflectivity={1}
+          transmission={0.02}
+          thickness={0.32}
+          ior={1.6}
         />
       </RoundedBox>
 
       {facePanels.map((panel, index) => (
         <mesh key={sections[index].id} position={panel.position} rotation={panel.rotation}>
-          <planeGeometry args={[1.62, 1.62]} />
+          <planeGeometry args={[2, 2]} />
           <meshBasicMaterial
             map={panel.texture}
             transparent
-            opacity={0.82}
+            opacity={0.92}
             depthWrite={false}
             toneMapped={false}
           />

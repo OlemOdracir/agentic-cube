@@ -1,8 +1,8 @@
 import { PerspectiveCamera, Stars } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import type { Group } from 'three'
-import { AdditiveBlending, Color, MathUtils, Vector2, Vector3 } from 'three'
+import { AdditiveBlending, CanvasTexture, Color, LinearFilter, MathUtils, SRGBColorSpace, Vector2, Vector3 } from 'three'
 import {
   playCubeDragTickSound,
   playCubeTransitionSound,
@@ -47,8 +47,144 @@ function easeInOutCubic(value: number) {
   return value < 0.5 ? 4 * value * value * value : 1 - (-2 * value + 2) ** 3 / 2
 }
 
+function createGlowTexture(inner: string, outer: string) {
+  const s = 512
+  const canvas = document.createElement('canvas')
+  canvas.width = s
+  canvas.height = s
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return null
+  const gradient = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2)
+  gradient.addColorStop(0, inner)
+  gradient.addColorStop(0.4, outer)
+  gradient.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, s, s)
+  const texture = new CanvasTexture(canvas)
+  texture.colorSpace = SRGBColorSpace
+  texture.magFilter = LinearFilter
+  texture.minFilter = LinearFilter
+  return texture
+}
+
+function createGridTexture() {
+  const s = 1024
+  const canvas = document.createElement('canvas')
+  canvas.width = s
+  canvas.height = s
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return null
+
+  ctx.fillStyle = 'rgba(2, 4, 12, 1)'
+  ctx.fillRect(0, 0, s, s)
+
+  const step = 64
+  ctx.strokeStyle = 'rgba(150, 155, 220, 0.06)'
+  ctx.lineWidth = 1
+  for (let x = 0; x <= s; x += step) {
+    ctx.beginPath()
+    ctx.moveTo(x, 0)
+    ctx.lineTo(x, s)
+    ctx.stroke()
+  }
+  for (let y = 0; y <= s; y += step) {
+    ctx.beginPath()
+    ctx.moveTo(0, y)
+    ctx.lineTo(s, y)
+    ctx.stroke()
+  }
+
+  ctx.fillStyle = 'rgba(180, 175, 230, 0.4)'
+  for (let x = 0; x <= s; x += step) {
+    for (let y = 0; y <= s; y += step) {
+      ctx.fillRect(x - 0.5, y - 0.5, 1.4, 1.4)
+    }
+  }
+
+  const fade = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s * 0.55)
+  fade.addColorStop(0, 'rgba(2, 4, 12, 0)')
+  fade.addColorStop(0.5, 'rgba(2, 4, 12, 0.2)')
+  fade.addColorStop(1, 'rgba(2, 4, 12, 1)')
+  ctx.fillStyle = fade
+  ctx.fillRect(0, 0, s, s)
+
+  const texture = new CanvasTexture(canvas)
+  texture.colorSpace = SRGBColorSpace
+  texture.magFilter = LinearFilter
+  texture.minFilter = LinearFilter
+  return texture
+}
+
+function createBeamTexture() {
+  const w = 256
+  const h = 1024
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return null
+  const gradient = ctx.createLinearGradient(0, 0, w, 0)
+  gradient.addColorStop(0, 'rgba(255,255,255,0)')
+  gradient.addColorStop(0.5, 'rgba(220,220,255,0.45)')
+  gradient.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, w, h)
+  const vfade = ctx.createLinearGradient(0, 0, 0, h)
+  vfade.addColorStop(0, 'rgba(0,0,0,0)')
+  vfade.addColorStop(0.55, 'rgba(0,0,0,0.4)')
+  vfade.addColorStop(1, 'rgba(0,0,0,1)')
+  ctx.globalCompositeOperation = 'destination-out'
+  ctx.fillStyle = vfade
+  ctx.fillRect(0, 0, w, h)
+  const texture = new CanvasTexture(canvas)
+  texture.colorSpace = SRGBColorSpace
+  texture.magFilter = LinearFilter
+  texture.minFilter = LinearFilter
+  return texture
+}
+
+type PlatformTicksProps = {
+  radius: number
+  count: number
+  faint?: boolean
+}
+
+function PlatformTicks({ radius, count, faint = false }: PlatformTicksProps) {
+  const ticks = Array.from({ length: count }, (_, i) => {
+    const angle = (i / count) * Math.PI * 2
+    const isMajor = i % 6 === 0
+    const length = (isMajor ? 0.085 : 0.04) * (faint ? 0.7 : 1)
+    const opacity = (isMajor ? 0.55 : 0.22) * (faint ? 0.5 : 1)
+    return { angle, length, opacity, isMajor }
+  })
+
+  return (
+    <group rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.41, 0]}>
+      {ticks.map((tick, i) => (
+        <mesh key={i} rotation={[0, 0, tick.angle]} position={[Math.cos(tick.angle) * radius, Math.sin(tick.angle) * radius, 0]}>
+          <planeGeometry args={[tick.length, 0.0085]} />
+          <meshBasicMaterial
+            color={tick.isMajor ? '#dcd6ff' : '#8d82ff'}
+            transparent
+            opacity={tick.opacity}
+            depthWrite={false}
+            blending={AdditiveBlending}
+            toneMapped={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
 export function CubeScene({ effects, onCursorModeChange, onSectionEnter, sectionOpen, sections }: CubeSceneProps) {
   const rigRef = useRef<Group>(null)
+  const platformGlowTexture = useMemo(
+    () => createGlowTexture('rgba(180, 170, 255, 0.85)', 'rgba(110, 96, 230, 0.32)'),
+    [],
+  )
+  const gridTexture = useMemo(() => createGridTexture(), [])
+  const beamTexture = useMemo(() => createBeamTexture(), [])
   const pointerRef = useRef(new Vector2(0, 0))
   const transitionRef = useRef({
     active: false,
@@ -76,12 +212,12 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
   })
   const { camera, size } = useThree()
   const isNarrow = size.width < 720
-  const cubeScale = isNarrow ? 0.62 : 0.74
-  const cubeBaseY = isNarrow ? 0.18 : 0.26
-  const platformScale = isNarrow ? 0.66 : 0.74
-  const platformBaseY = isNarrow ? 0.04 : -0.12
-  const cameraPosition = isNarrow ? ([0, 0.66, 7.4] as const) : ([0, 0.86, 7.45] as const)
-  const cameraTargetY = isNarrow ? 0.02 : -0.14
+  const cubeScale = isNarrow ? 0.7 : 0.92
+  const cubeBaseY = isNarrow ? 0.28 : 0.34
+  const platformScale = isNarrow ? 0.78 : 0.98
+  const platformBaseY = isNarrow ? 0 : -0.18
+  const cameraPosition = isNarrow ? ([0, 0.66, 7.4] as const) : ([0, 0.78, 7.6] as const)
+  const cameraTargetY = isNarrow ? 0.06 : -0.04
 
   const getClickedSectionId = useCallback((point?: Vector3) => {
     if (!rigRef.current || !point) {
@@ -149,8 +285,8 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
     drag.velocityY *= drag.active ? 0.72 : 0.92
 
     const t = clock.getElapsedTime()
-    const idleYaw = -0.43 + (effects.idle ? Math.sin(t * 0.18) * 0.018 : 0)
-    const idlePitch = 0.34 + (effects.idle ? Math.sin(t * 0.15) * 0.01 : 0)
+    const idleYaw = -0.45 + (effects.idle ? Math.sin(t * 0.18) * 0.018 : 0)
+    const idlePitch = 0.3 + (effects.idle ? Math.sin(t * 0.15) * 0.01 : 0)
     const pointerYaw = drag.active ? 0 : pointerRef.current.x * (isNarrow ? 0.18 : 0.26)
     const pointerPitch = drag.active ? 0 : -pointerRef.current.y * (isNarrow ? 0.1 : 0.13)
     const transition = transitionRef.current
@@ -322,34 +458,53 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
       />
       <CampusEnvironment />
 
-      <ambientLight intensity={0.22} />
-      <directionalLight
-        position={[3.9, 4.8, 4.4]}
-        intensity={3.45}
-        color={new Color('#dfeaff')}
-        castShadow={effects.shadows}
-      />
-      <directionalLight position={[-4.8, 1.8, -3.4]} intensity={1.55} color={new Color('#7d78ff')} />
-      <pointLight position={[0, -1.04, 1.2]} intensity={4.4} color={new Color('#746fff')} distance={6.8} />
-      <pointLight position={[1.2, 0.4, 2.2]} intensity={2.95} color={new Color('#d8e8ff')} distance={4.5} />
-      <pointLight position={[-1.8, 0.9, 1.8]} intensity={2.35} color={new Color('#8c7bff')} distance={5.5} />
-      <pointLight position={[0, 1.35, -0.7]} intensity={1.9} color={new Color('#5d82ff')} distance={5} />
+      <ambientLight intensity={0.08} />
+
+      <directionalLight position={[-4.2, 2.2, -3.4]} intensity={0.55} color={new Color('#5a5cff')} />
+      <pointLight position={[0, -1.32, 0.9]} intensity={7.4} color={new Color('#7a6cff')} distance={5.5} />
+      <pointLight position={[1.6, 0.6, 2.4]} intensity={1.1} color={new Color('#c9d2ff')} distance={4.2} />
+      <pointLight position={[-1.6, 0.6, 2.4]} intensity={1.1} color={new Color('#9387ff')} distance={4.2} />
+
       <spotLight
-        position={[0.1, 4.6, 3.2]}
-        angle={0.38}
-        penumbra={0.84}
-        intensity={6.2}
-        color={new Color('#f1f4ff')}
+        position={[0.4, 7.6, 2.6]}
+        target-position={[0, 0.4, 0]}
+        angle={0.16}
+        penumbra={0.25}
+        intensity={22}
+        color={new Color('#ffffff')}
         castShadow={effects.shadows}
       />
       <spotLight
-        position={[0, -0.96, 0.12]}
-        target-position={[0, 0.2, 0]}
-        angle={0.58}
-        penumbra={0.9}
-        intensity={4.8}
-        color={new Color('#776fff')}
-        castShadow={effects.shadows}
+        position={[2.4, 6.2, 1.4]}
+        target-position={[0.4, 0.6, 0.4]}
+        angle={0.2}
+        penumbra={0.45}
+        intensity={9}
+        color={new Color('#e0e4ff')}
+      />
+      <spotLight
+        position={[-2.6, 5.6, 0.8]}
+        target-position={[-0.4, 0.6, 0]}
+        angle={0.24}
+        penumbra={0.5}
+        intensity={6.4}
+        color={new Color('#c4cbff')}
+      />
+      <spotLight
+        position={[0, 5.2, -2.6]}
+        target-position={[0, 0.4, 0]}
+        angle={0.34}
+        penumbra={0.7}
+        intensity={3.4}
+        color={new Color('#9aa0ff')}
+      />
+      <spotLight
+        position={[0, -1.2, 0.05]}
+        target-position={[0, 0.4, 0]}
+        angle={0.62}
+        penumbra={0.85}
+        intensity={7.4}
+        color={new Color('#7c6dff')}
       />
 
       <group
@@ -375,36 +530,73 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
       <group scale={platformScale} position={[0, platformBaseY, 0]}>
         <mesh position={[0, -1.455, 0]} receiveShadow={effects.shadows} rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[2.72, 180]} />
-          <meshStandardMaterial color="#03040b" metalness={0.82} roughness={0.28} transparent opacity={0.38} />
+          <meshStandardMaterial color="#02030a" metalness={0.86} roughness={0.22} transparent opacity={0.42} />
         </mesh>
 
-        <mesh position={[0, -1.418, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.68, 128]} />
-          <meshBasicMaterial color="#766fff" transparent opacity={0.18} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
+        <mesh position={[0, -1.42, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[2.2, 2.2]} />
+          <meshBasicMaterial
+            map={platformGlowTexture}
+            transparent
+            opacity={0.85}
+            depthWrite={false}
+            blending={AdditiveBlending}
+            toneMapped={false}
+          />
+        </mesh>
+
+        <mesh position={[0, -1.422, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[0.12, 64]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={1} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
         </mesh>
 
         <mesh position={[0, -1.412, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.82, 0.835, 180]} />
-          <meshBasicMaterial color="#f1f4ff" transparent opacity={0.48} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
+          <ringGeometry args={[0.96, 0.978, 180]} />
+          <meshBasicMaterial color="#f4f2ff" transparent opacity={0.85} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
         </mesh>
 
-        <mesh position={[0, -1.407, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[1.18, 1.192, 220]} />
-          <meshBasicMaterial color="#8b84ff" transparent opacity={0.38} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
+        <mesh position={[0, -1.41, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[1.18, 1.196, 200]} />
+          <meshBasicMaterial color="#b8aeff" transparent opacity={0.55} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
         </mesh>
 
-        <mesh position={[0, -1.402, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[1.72, 1.73, 260]} />
-          <meshBasicMaterial color="#5f7cff" transparent opacity={0.22} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
+        <mesh position={[0, -1.408, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[1.52, 1.534, 240]} />
+          <meshBasicMaterial color="#8a7eff" transparent opacity={0.42} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
         </mesh>
 
-        <mesh position={[0, -1.397, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[2.22, 2.226, 280]} />
-          <meshBasicMaterial color="#cfd8ff" transparent opacity={0.105} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
+        <mesh position={[0, -1.406, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[1.92, 1.93, 260]} />
+          <meshBasicMaterial color="#6b66ff" transparent opacity={0.3} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
         </mesh>
+
+        <mesh position={[0, -1.404, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[2.34, 2.346, 280]} />
+          <meshBasicMaterial color="#cfd8ff" transparent opacity={0.14} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
+        </mesh>
+
+        <PlatformTicks radius={2.08} count={84} />
+        <PlatformTicks radius={2.5} count={120} faint />
       </group>
 
-      <Stars radius={25} depth={8} count={180} factor={0.45} saturation={0} fade speed={0} />
+      <mesh position={[0, 1.2, -4.5]}>
+        <planeGeometry args={[22, 14]} />
+        <meshBasicMaterial map={gridTexture} transparent opacity={0.7} depthWrite={false} toneMapped={false} />
+      </mesh>
+
+      <mesh position={[0, 4.6, -0.4]}>
+        <planeGeometry args={[1.4, 7]} />
+        <meshBasicMaterial
+          map={beamTexture}
+          transparent
+          opacity={0.55}
+          depthWrite={false}
+          blending={AdditiveBlending}
+          toneMapped={false}
+        />
+      </mesh>
+
+      <Stars radius={25} depth={8} count={140} factor={0.4} saturation={0} fade speed={0} />
     </>
   )
 }
