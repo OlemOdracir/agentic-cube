@@ -35,13 +35,13 @@ export function WaveFieldShowcase() {
         style={{ width: viewport.width || '100vw', height: viewport.height || '100vh' }}
       >
         <Canvas
-          camera={{ position: variant === 'city' ? [0, 1.45, 7.6] : [0, 0.55, 4.6], fov: variant === 'city' ? 54 : 48, near: 0.1, far: 80 }}
+          camera={{ position: variant === 'city' ? [0, 1.9, 10.8] : [0, 0.55, 4.6], fov: variant === 'city' ? 52 : 48, near: 0.1, far: 80 }}
           dpr={[1.5, 2]}
           gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
         >
           <Suspense fallback={null}>
             <color attach="background" args={['#08050d']} />
-            <fog attach="fog" args={['#08050d', variant === 'city' ? 12 : 9, variant === 'city' ? 36 : 28]} />
+            <fog attach="fog" args={['#08050d', variant === 'city' ? 14 : 9, variant === 'city' ? 40 : 28]} />
             <ambientLight intensity={0.18} />
             {variant === 'city' ? (
               <CityCorridorField />

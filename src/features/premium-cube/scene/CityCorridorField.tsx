@@ -46,7 +46,7 @@ const SIGNAL_SIZE_FACTOR = POINT_SIZE_FACTOR * 3.2
 
 // Lamp glow appearance
 const LAMP_GLOW_COLOR = '#b09aff'
-const LAMP_GLOW_SIZE_FACTOR = POINT_SIZE_FACTOR * 7.5
+const LAMP_GLOW_SIZE_FACTOR = POINT_SIZE_FACTOR * 3.2
 
 type CityNode =
   | {
@@ -505,8 +505,9 @@ const POINTS_FRAGMENT = /* glsl */ `
   void main() {
     vec4 sprite = texture2D(uMap, gl_PointCoord);
     float depthFade = mix(1.0, 0.06, smoothstep(uDepthNear, uDepthFar, vDepth));
+    float nearFade = smoothstep(1.0, 2.8, vDepth);
     float heightBoost = smoothstep(-0.6, 2.8, vHeight);
-    float alpha = sprite.a * (uAlphaBase + heightBoost * uAlphaCrest) * depthFade * 1.25;
+    float alpha = sprite.a * (uAlphaBase + heightBoost * uAlphaCrest) * depthFade * nearFade * 1.25;
     gl_FragColor = vec4(uColor * (0.72 + depthFade * 0.42), alpha);
   }
 `
@@ -563,7 +564,8 @@ const GLOW_FRAGMENT = /* glsl */ `
   void main() {
     vec4 sprite = texture2D(uMap, gl_PointCoord);
     float depthFade = mix(1.0, 0.02, smoothstep(uDepthNear, uDepthFar, vDepth));
-    float alpha = sprite.a * 0.26 * depthFade;
+    float nearFade = smoothstep(1.2, 3.5, vDepth);
+    float alpha = sprite.a * 0.18 * depthFade * nearFade;
     gl_FragColor = vec4(uColor, alpha);
   }
 `
@@ -793,10 +795,11 @@ export function CityCorridorField() {
       const zb = nodePositions[bBase + 2]
       const near = ((za + zb) * 0.5 - FAR_Z) / DEPTH
       const wrapGap = Math.abs(za - zb)
+      const nearCull = near < 0.78 ? 1.0 : Math.max(0, 1.0 - (near - 0.78) / 0.22)
       const intensity =
         wrapGap > DEPTH * 0.45
           ? 0
-          : LINE_GLOBAL_INTENSITY * pair.strength * (0.16 + near * 0.55) * (0.84 + Math.sin(t * 0.5 + index) * 0.08)
+          : LINE_GLOBAL_INTENSITY * pair.strength * (0.16 + near * 0.55) * nearCull * (0.84 + Math.sin(t * 0.5 + index) * 0.08)
 
       linePositionArray[out] = nodePositions[aBase]
       linePositionArray[out + 1] = nodePositions[aBase + 1]
