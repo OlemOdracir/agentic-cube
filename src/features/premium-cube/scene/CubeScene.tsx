@@ -404,8 +404,8 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
 
   return (
     <>
-      <color attach="background" args={['#03050b']} />
-      <fog attach="fog" args={['#03050b', 9, 24]} />
+      <color attach="background" args={['#08050d']} />
+      <fog attach="fog" args={['#08050d', 9, 26]} />
 
       <PerspectiveCamera
         makeDefault
