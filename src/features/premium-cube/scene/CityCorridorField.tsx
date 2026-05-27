@@ -35,7 +35,7 @@ const ROAD_ROWS = 64
 const ROAD_COLS = 19
 const BUILDING_COUNT_PER_SIDE = 18
 const TREE_COUNT_PER_SIDE = 11
-const SKYLINE_TOWER_COUNT = 13
+const VEHICLE_COUNT = 6
 const CORRIDOR_SPEED = 0.82
 const ROAD_HALF_WIDTH_FAR = 0.72
 const ROAD_HALF_WIDTH_NEAR = 2.45
@@ -45,6 +45,23 @@ const LAMP_CURB_OFFSET = 0.22
 // Lamp glow appearance
 const LAMP_GLOW_COLOR = '#f3f2f8'
 const LAMP_GLOW_SIZE_FACTOR = POINT_SIZE_FACTOR * 5.6
+
+// Distant skyline backdrop — its own fog-free layer so a dense city of
+// huge-but-far towers reads on the horizon instead of dissolving into fog.
+const SKYLINE_GROUND_Y = -1.0
+const SKYLINE_X_SPAN = 13
+const SKYLINE_INTENSITY = 0.34
+// [z depth, brightness] per receding layer (farther = dimmer)
+const SKYLINE_LAYERS: ReadonlyArray<readonly [number, number]> = [
+  [-44, 0.4],
+  [-39, 0.62],
+  [-34, 0.85],
+]
+// Fake atmospheric perspective: bases dissolve into the dark horizon, only the
+// upper silhouettes read — keeps the fog-free backdrop from over-asserting.
+function skylineHeightFade(y: number) {
+  return 0.12 + Math.min(1, (y - SKYLINE_GROUND_Y) / 3.4) * 0.88
+}
 
 type CityNode =
   | {
@@ -86,11 +103,13 @@ type CityNode =
       localZ: number
     }
   | {
-      kind: 'skyline'
-      x: number
-      y: number
-      z: number
-      phase: number
+      kind: 'vehicle'
+      baseZ: number
+      laneX: number
+      speed: number
+      lx: number
+      ly: number
+      lz: number
     }
 
 type LinePair = {
@@ -199,18 +218,25 @@ function buildCityGraph() {
     }
   }
   for (let col = 0; col < ROAD_COLS; col += 1) {
-    for (let row = 0; row < ROAD_ROWS - 1; row += 1) {
-      const isCurb = col === 0 || col === ROAD_COLS - 1
-      const isCenter = col === Math.floor(ROAD_COLS / 2)
-      pairs.push({ a: roadIndex[row][col], b: roadIndex[row + 1][col], strength: isCurb ? 1.08 : isCenter ? 0.72 : 0.3 })
+    const isCurb = col === 0 || col === ROAD_COLS - 1
+    const isCenter = col === Math.floor(ROAD_COLS / 2)
+    // Wrap the last row back to the first so the scrolling ring has no seam gap;
+    // the wrapGap cull below hides whichever segment straddles the reset (it sits
+    // behind the camera). Without this the missing 63→0 link drifts as a visible cut.
+    for (let row = 0; row < ROAD_ROWS; row += 1) {
+      pairs.push({
+        a: roadIndex[row][col],
+        b: roadIndex[(row + 1) % ROAD_ROWS][col],
+        strength: isCurb ? 1.08 : isCenter ? 0.72 : 0.3,
+      })
     }
   }
   for (const side of [-1, 1] as const) {
-    for (let row = 0; row < ROAD_ROWS - 1; row += 1) {
+    for (let row = 0; row < ROAD_ROWS; row += 1) {
       for (let band = 0; band < SIDEWALK_BANDS; band += 1) {
         pairs.push({
           a: sidewalkIndex[side][row][band],
-          b: sidewalkIndex[side][row + 1][band],
+          b: sidewalkIndex[side][(row + 1) % ROAD_ROWS][band],
           strength: band === 0 ? 1.18 : band === 2 ? 0.78 : 0.36,
         })
       }
@@ -229,11 +255,13 @@ function buildCityGraph() {
   const rand = seeded(0x5157c17)
   for (const side of [-1, 1] as const) {
     for (let i = 0; i < BUILDING_COUNT_PER_SIDE; i += 1) {
-      const width = 0.85 + rand() * 1.2
-      const depth = 0.9 + rand() * 1.55
-      const height = 1.6 + rand() * 3.8
-      const levels = 6 + Math.floor(rand() * 7)
-      const centerX = side * (1.84 + rand() * 1.36)
+      // A couple of taller "landmark" towers break the left/right symmetry.
+      const isLandmark = (side === -1 && i === 5) || (side === 1 && i === 13)
+      const width = (0.85 + rand() * 1.2) * (isLandmark ? 1.35 : 1)
+      const depth = (0.9 + rand() * 1.55) * (isLandmark ? 1.2 : 1)
+      const height = (1.6 + rand() * 3.8) * (isLandmark ? 2.1 : 1)
+      const levels = 6 + Math.floor(rand() * 7) + (isLandmark ? 5 : 0)
+      const centerX = side * (1.84 + rand() * 1.36 + (isLandmark ? 0.55 : 0))
       const baseZ = FAR_Z + (i / BUILDING_COUNT_PER_SIDE) * DEPTH
       const speed = CORRIDOR_SPEED
       const frontGrid: number[][] = []
@@ -375,91 +403,263 @@ function buildCityGraph() {
         pairs.push({ a: trunkBottom, b: root, strength: 0.36 })
       }
 
-      for (let ring = 0; ring < 2; ring += 1) {
+      // Canopy as a layered dome: stacked rings joined by vertical struts plus an
+      // apex, so it reads as foliage volume instead of a sparse lollipop burst.
+      const canopyBaseY = -1.02 + trunkHeight
+      const segments = 10
+      const ringProfile = [
+        { radius: 0.84, y: -0.06 },
+        { radius: 1.0, y: 0.3 },
+        { radius: 0.6, y: 0.62 },
+      ] as const
+      const rings: number[][] = []
+      for (let ring = 0; ring < ringProfile.length; ring += 1) {
         const ringNodes: number[] = []
-        const radius = canopyRadius * (ring === 0 ? 1 : 0.62)
-        const y = -1.02 + trunkHeight + ring * canopyRadius * 0.38
-        const segments = 8
+        const radius = canopyRadius * ringProfile[ring].radius
+        const y = canopyBaseY + canopyRadius * ringProfile[ring].y
         for (let s = 0; s < segments; s += 1) {
-          const angle = (s / segments) * Math.PI * 2
-          const node =
+          const angle = (s / segments) * Math.PI * 2 + ring * 0.32
+          ringNodes.push(
             nodes.push({
               kind: 'tree',
               baseZ,
               centerX,
               localX: Math.cos(angle) * radius,
-              localY: y + Math.sin(angle * 2) * 0.04,
+              localY: y + Math.sin(angle * 3) * 0.035,
               localZ: Math.sin(angle) * radius,
               speed,
-            }) - 1
-          ringNodes.push(node)
+            }) - 1,
+          )
         }
+        rings.push(ringNodes)
+      }
+      const apex = nodes.push({ kind: 'tree', baseZ, centerX, localX: 0, localY: canopyBaseY + canopyRadius * 0.92, localZ: 0, speed }) - 1
+
+      for (let ring = 0; ring < rings.length; ring += 1) {
+        const ringNodes = rings[ring]
         for (let s = 0; s < segments; s += 1) {
-          pairs.push({ a: ringNodes[s], b: ringNodes[(s + 1) % segments], strength: 0.92 })
-          pairs.push({ a: trunkTop, b: ringNodes[s], strength: ring === 0 ? 0.42 : 0.36 })
-          if (s % 2 === 0) {
-            pairs.push({ a: trunkMid, b: ringNodes[s], strength: 0.3 })
-          }
-          if (ring === 1) {
-            pairs.push({ a: ringNodes[s], b: ringNodes[(s + 3) % segments], strength: 0.22 })
+          // Horizontal ring loop.
+          pairs.push({ a: ringNodes[s], b: ringNodes[(s + 1) % segments], strength: 0.86 })
+          // Vertical struts to the ring above (gives the dome its volume).
+          if (ring < rings.length - 1) {
+            pairs.push({ a: ringNodes[s], b: rings[ring + 1][s], strength: 0.46 })
+            if (s % 2 === 0) {
+              pairs.push({ a: ringNodes[s], b: rings[ring + 1][(s + 1) % segments], strength: 0.24 })
+            }
           }
         }
       }
+      // Trunk into the lowest ring, apex crowning the top ring.
+      for (let s = 0; s < segments; s += 1) {
+        if (s % 2 === 0) pairs.push({ a: trunkTop, b: rings[0][s], strength: 0.4 })
+        pairs.push({ a: apex, b: rings[rings.length - 1][s], strength: 0.34 })
+      }
+      pairs.push({ a: trunkTop, b: rings[0][0], strength: 0.3 })
     }
   }
 
   const lampDepths = [-25.6, -19.2, -12.8, -6.4, 0]
   for (const side of [-1, 1] as const) {
     for (const baseZ of lampDepths) {
+      const baseY = -1.02
       const xOffset = 0.28
-      const poleHeight = 1.42
-      const armLength = 0.3
-      const poleBase =
-        nodes.push({ kind: 'lamp', baseZ, side, localX: xOffset, localY: -1.02, localZ: 0 }) - 1
-      const poleMid =
-        nodes.push({ kind: 'lamp', baseZ, side, localX: xOffset, localY: -1.02 + poleHeight * 0.52, localZ: 0 }) - 1
-      const poleTop =
-        nodes.push({ kind: 'lamp', baseZ, side, localX: xOffset, localY: -1.02 + poleHeight, localZ: 0 }) - 1
-      const armEnd =
-        nodes.push({ kind: 'lamp', baseZ, side, localX: xOffset - armLength, localY: -1.02 + poleHeight * 0.93, localZ: 0 }) - 1
-      const lampHead =
-        nodes.push({ kind: 'lamp', baseZ, side, localX: xOffset - armLength * 1.18, localY: -1.02 + poleHeight * 0.82, localZ: 0 }) - 1
-      const baseLeft =
-        nodes.push({ kind: 'lamp', baseZ, side, localX: xOffset - 0.08, localY: -1.02, localZ: -0.08 }) - 1
-      const baseRight =
-        nodes.push({ kind: 'lamp', baseZ, side, localX: xOffset + 0.08, localY: -1.02, localZ: 0.08 }) - 1
+      const poleHeight = 1.52
+      const armLength = 0.34
+      const headX = xOffset - armLength * 1.18
+      const corners = [
+        [-1, -1],
+        [1, -1],
+        [1, 1],
+        [-1, 1],
+      ] as const
+      const lamp = (lx: number, ly: number, lz: number) =>
+        nodes.push({ kind: 'lamp', baseZ, side, localX: lx, localY: ly, localZ: lz }) - 1
 
-      lampHeadIndices.push(lampHead)
+      // Tapered plinth footing.
+      const pr = 0.07
+      const plinthGround = corners.map(([dx, dz]) => lamp(xOffset + dx * pr, baseY, dz * pr))
+      const plinthTop = corners.map(([dx, dz]) => lamp(xOffset + dx * pr * 0.66, baseY + 0.16, dz * pr * 0.66))
+      for (let k = 0; k < 4; k += 1) {
+        pairs.push({ a: plinthGround[k], b: plinthGround[(k + 1) % 4], strength: 0.4 })
+        pairs.push({ a: plinthTop[k], b: plinthTop[(k + 1) % 4], strength: 0.5 })
+        pairs.push({ a: plinthGround[k], b: plinthTop[k], strength: 0.46 })
+      }
 
-      pairs.push({ a: poleBase, b: poleMid, strength: 0.86 })
-      pairs.push({ a: poleMid, b: poleTop, strength: 0.86 })
-      pairs.push({ a: poleTop, b: armEnd, strength: 0.76 })
-      pairs.push({ a: armEnd, b: lampHead, strength: 1.12 })
-      pairs.push({ a: baseLeft, b: poleBase, strength: 0.42 })
-      pairs.push({ a: baseRight, b: poleBase, strength: 0.42 })
-      pairs.push({ a: baseLeft, b: baseRight, strength: 0.34 })
+      // Pole + curved arm reaching over the street.
+      const poleBase = lamp(xOffset, baseY + 0.16, 0)
+      const poleMid = lamp(xOffset, baseY + poleHeight * 0.55, 0)
+      const poleTop = lamp(xOffset, baseY + poleHeight, 0)
+      const armMid = lamp(xOffset - armLength * 0.55, baseY + poleHeight * 1.02, 0)
+      const armEnd = lamp(headX, baseY + poleHeight * 0.97, 0)
+      pairs.push({ a: poleBase, b: poleMid, strength: 0.9 })
+      pairs.push({ a: poleMid, b: poleTop, strength: 0.9 })
+      pairs.push({ a: poleTop, b: armMid, strength: 0.82 })
+      pairs.push({ a: armMid, b: armEnd, strength: 0.82 })
+      for (let k = 0; k < 4; k += 1) pairs.push({ a: plinthTop[k], b: poleBase, strength: 0.32 })
+
+      // Luminaire: a small ring tapering down to a glowing bulb.
+      const lr = 0.055
+      const lanternY = baseY + poleHeight * 0.9
+      const lanternRing = corners.map(([dx, dz]) => lamp(headX + dx * lr, lanternY, dz * lr))
+      const bulb = lamp(headX, lanternY - 0.18, 0)
+      for (let k = 0; k < 4; k += 1) {
+        pairs.push({ a: lanternRing[k], b: lanternRing[(k + 1) % 4], strength: 0.8 })
+        pairs.push({ a: lanternRing[k], b: bulb, strength: 0.95 })
+        pairs.push({ a: armEnd, b: lanternRing[k], strength: 0.42 })
+      }
+
+      lampHeadIndices.push(bulb)
+
+      // Faint light cone projecting onto the pavement (vector-style glow).
+      const poolR = 0.36
+      const poolSeg = 6
+      const poolNodes: number[] = []
+      for (let s = 0; s < poolSeg; s += 1) {
+        const a = (s / poolSeg) * Math.PI * 2
+        poolNodes.push(lamp(headX + Math.cos(a) * poolR, baseY + 0.01, Math.sin(a) * poolR))
+      }
+      for (let s = 0; s < poolSeg; s += 1) {
+        pairs.push({ a: poolNodes[s], b: poolNodes[(s + 1) % poolSeg], strength: 0.22 })
+        if (s % 2 === 0) pairs.push({ a: bulb, b: poolNodes[s], strength: 0.16 })
+      }
     }
   }
 
-  const skylineBaseZ = FAR_Z + 2.4
-  for (let i = 0; i < SKYLINE_TOWER_COUNT; i += 1) {
-    const x = -1.85 + (i / (SKYLINE_TOWER_COUNT - 1)) * 3.7
-    const height = 1.3 + (1 - Math.abs(i - (SKYLINE_TOWER_COUNT - 1) / 2) / 7) * 3.4 + rand() * 0.6
-    const width = 0.14 + rand() * 0.22
-    const base = nodes.push({ kind: 'skyline', x, y: -0.95, z: skylineBaseZ + rand() * 1.3, phase: rand() * 10 }) - 1
-    const top = nodes.push({ kind: 'skyline', x, y: -0.95 + height, z: skylineBaseZ + rand() * 1.3, phase: rand() * 10 }) - 1
-    const left = nodes.push({ kind: 'skyline', x: x - width, y: -0.95 + height * 0.82, z: skylineBaseZ, phase: rand() * 10 }) - 1
-    const right = nodes.push({ kind: 'skyline', x: x + width, y: -0.95 + height * 0.82, z: skylineBaseZ, phase: rand() * 10 }) - 1
-    pairs.push({ a: base, b: top, strength: 1.1 })
-    pairs.push({ a: left, b: right, strength: 0.72 })
-    pairs.push({ a: left, b: top, strength: 0.54 })
-    pairs.push({ a: right, b: top, strength: 0.54 })
-    if (i > 0) {
-      pairs.push({ a: top - 4, b: top, strength: 0.32 })
+  // Wireframe traffic flowing toward the camera. Bodies scale with the lane so
+  // they shrink with distance and recycle behind the camera like everything else.
+  // Front corners feed the lamp-glow system as headlights. +lz is toward camera.
+  const vehicleNode =
+    (laneX: number, speed: number, baseZ: number) => (lx: number, ly: number, lz: number) =>
+      nodes.push({ kind: 'vehicle', baseZ, laneX, speed, lx, ly, lz }) - 1
+  const makeBox = (
+    v: (lx: number, ly: number, lz: number) => number,
+    halfW: number,
+    y0: number,
+    y1: number,
+    zBack: number,
+    zFront: number,
+    strength: number,
+  ) => {
+    const profile = [
+      [-halfW, zBack],
+      [halfW, zBack],
+      [halfW, zFront],
+      [-halfW, zFront],
+    ] as const
+    const lo = profile.map(([x, z]) => v(x, y0, z))
+    const hi = profile.map(([x, z]) => v(x, y1, z))
+    for (let k = 0; k < 4; k += 1) {
+      pairs.push({ a: lo[k], b: lo[(k + 1) % 4], strength })
+      pairs.push({ a: hi[k], b: hi[(k + 1) % 4], strength })
+      pairs.push({ a: lo[k], b: hi[k], strength })
     }
+  }
+
+  // Cars: low body + cabin.
+  const carLanes = [-0.66, -0.34, 0.34, 0.66]
+  for (let i = 0; i < VEHICLE_COUNT; i += 1) {
+    const v = vehicleNode(carLanes[i % carLanes.length], CORRIDOR_SPEED * (1.35 + rand() * 0.9), FAR_Z + (i / VEHICLE_COUNT) * DEPTH)
+    makeBox(v, 0.19, 0, 0.22, -0.4, 0.4, 0.74)
+    makeBox(v, 0.14, 0.22, 0.39, -0.2, 0.2, 0.66)
+    lampHeadIndices.push(v(-0.125, 0.09, 0.4), v(0.125, 0.09, 0.4))
+  }
+
+  // One delivery truck: tall cargo box behind a lower cab.
+  {
+    const v = vehicleNode(0.5, CORRIDOR_SPEED * 1.28, FAR_Z + 0.42 * DEPTH)
+    makeBox(v, 0.22, 0, 0.64, -0.78, 0.23, 0.74)
+    makeBox(v, 0.2, 0, 0.35, 0.23, 0.78, 0.7)
+    lampHeadIndices.push(v(-0.13, 0.09, 0.78), v(0.13, 0.09, 0.78))
+  }
+
+  // One bus: long tall box with a window band down each side.
+  {
+    const v = vehicleNode(-0.5, CORRIDOR_SPEED * 1.18, FAR_Z + 0.78 * DEPTH)
+    makeBox(v, 0.22, 0, 0.55, -0.87, 0.87, 0.74)
+    const wy = 0.38
+    pairs.push({ a: v(-0.22, wy, -0.84), b: v(-0.22, wy, 0.84), strength: 0.5 })
+    pairs.push({ a: v(0.22, wy, -0.84), b: v(0.22, wy, 0.84), strength: 0.5 })
+    lampHeadIndices.push(v(-0.14, 0.09, 0.87), v(0.14, 0.09, 0.87))
   }
 
   return { nodes, pairs, lampHeadIndices }
+}
+
+// Static, fog-free backdrop: dense rows of boxy towers across several receding
+// layers. Returns baked line-segment positions + per-vertex colors so a far
+// "downtown" silhouette reads on the horizon without any per-frame work.
+function buildSkyline() {
+  const rand = seeded(0xc1745)
+  const positions: number[] = []
+  const colors: number[] = []
+
+  const pushVertex = (x: number, y: number, z: number, brightness: number) => {
+    const b = brightness * skylineHeightFade(y)
+    positions.push(x, y, z)
+    colors.push(LINE_COLOR_RGB[0] * b, LINE_COLOR_RGB[1] * b, LINE_COLOR_RGB[2] * b)
+  }
+  const edge = (z: number, x1: number, y1: number, x2: number, y2: number, brightness: number) => {
+    pushVertex(x1, y1, z, brightness)
+    pushVertex(x2, y2, z, brightness)
+  }
+
+  for (const [z, layerBright] of SKYLINE_LAYERS) {
+    let x = -SKYLINE_X_SPAN
+    while (x < SKYLINE_X_SPAN) {
+      const w = 0.5 + rand() * 1.5
+      const centerFactor = 1 - Math.min(1, Math.abs(x) / SKYLINE_X_SPAN)
+      const height = 1.4 + rand() * 2.0 + centerFactor * (2.6 + rand() * 3.8)
+      const left = x
+      const right = x + w
+      const top = SKYLINE_GROUND_Y + height
+      const brightness = SKYLINE_INTENSITY * layerBright * (0.72 + Math.min(1, height / 7) * 0.28)
+      const roof = rand()
+
+      if (roof < 0.46) {
+        // Flat-top box.
+        edge(z, left, SKYLINE_GROUND_Y, left, top, brightness)
+        edge(z, left, top, right, top, brightness)
+        edge(z, right, top, right, SKYLINE_GROUND_Y, brightness)
+      } else if (roof < 0.78) {
+        // Stepped setback: full-width base, narrower crown.
+        const shoulder = SKYLINE_GROUND_Y + height * (0.62 + rand() * 0.14)
+        const inset = w * (0.18 + rand() * 0.12)
+        const cl = left + inset
+        const cr = right - inset
+        edge(z, left, SKYLINE_GROUND_Y, left, shoulder, brightness)
+        edge(z, right, SKYLINE_GROUND_Y, right, shoulder, brightness)
+        edge(z, left, shoulder, cl, shoulder, brightness)
+        edge(z, cr, shoulder, right, shoulder, brightness)
+        edge(z, cl, shoulder, cl, top, brightness)
+        edge(z, cr, shoulder, cr, top, brightness)
+        edge(z, cl, top, cr, top, brightness)
+      } else {
+        // Tapered crown: walls rise then narrow to a small roof edge.
+        const shoulder = SKYLINE_GROUND_Y + height * 0.74
+        const inset = w * (0.28 + rand() * 0.12)
+        const tl = left + inset
+        const tr = right - inset
+        edge(z, left, SKYLINE_GROUND_Y, left, shoulder, brightness)
+        edge(z, right, SKYLINE_GROUND_Y, right, shoulder, brightness)
+        edge(z, left, shoulder, tl, top, brightness)
+        edge(z, right, shoulder, tr, top, brightness)
+        edge(z, tl, top, tr, top, brightness)
+      }
+
+      // Floor hints + a roof antenna for the tall ones, to read as real buildings.
+      if (height > 4) {
+        const mid = SKYLINE_GROUND_Y + height * 0.52
+        edge(z, left, mid, right, mid, brightness * 0.55)
+        if (rand() > 0.5) {
+          const cx = (left + right) * 0.5
+          edge(z, cx, top, cx, top + 0.5 + rand() * 0.9, brightness * 0.7)
+        }
+      }
+      x = right + 0.12 + rand() * 0.5
+    }
+  }
+
+  return { positions: new Float32Array(positions), colors: new Float32Array(colors) }
 }
 
 // ── Shaders ───────────────────────────────────────────────────────────────────
@@ -546,6 +746,14 @@ export function CityCorridorField() {
     return geometry
   }, [graph.lampHeadIndices.length])
 
+  const skylineGeometry = useMemo(() => {
+    const { positions, colors } = buildSkyline()
+    const geometry = new BufferGeometry()
+    geometry.setAttribute('position', new BufferAttribute(positions, 3))
+    geometry.setAttribute('color', new BufferAttribute(colors, 3))
+    return geometry
+  }, [])
+
   const dotTexture = useMemo(() => createDotTexture(), [])
   const glowTexture = useMemo(() => createGlowTexture(), [])
 
@@ -598,6 +806,19 @@ export function CityCorridorField() {
         transparent: true,
         depthTest: true,
         depthWrite: true,
+        blending: AdditiveBlending,
+      }),
+    [],
+  )
+
+  const skylineMaterial = useMemo(
+    () =>
+      new LineBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+        fog: false,
         blending: AdditiveBlending,
       }),
     [],
@@ -664,11 +885,13 @@ export function CityCorridorField() {
         nodePositions[base] = sidewalkX
         nodePositions[base + 1] = node.localY + metalTension
         nodePositions[base + 2] = z
-      } else if (node.kind === 'skyline') {
-        const shimmer = Math.sin(t * 0.38 + node.phase) * 0.02
-        nodePositions[base] = node.x + shimmer
-        nodePositions[base + 1] = node.y
-        nodePositions[base + 2] = node.z
+      } else if (node.kind === 'vehicle') {
+        const anchorZ = wrapDepth(node.baseZ + t * node.speed)
+        const near = (anchorZ - FAR_Z) / DEPTH
+        const laneFactor = (roadHalfWidth(near) / ROAD_HALF_WIDTH_NEAR) * lateralScale(near)
+        nodePositions[base] = (node.laneX + node.lx) * laneFactor
+        nodePositions[base + 1] = -1.04 + node.ly * laneFactor
+        nodePositions[base + 2] = wrapDepth(anchorZ + node.lz * laneFactor)
       }
     })
 
@@ -732,6 +955,7 @@ export function CityCorridorField() {
   return (
     <>
       <CameraLookAt />
+      <lineSegments geometry={skylineGeometry} material={skylineMaterial} renderOrder={-1} />
       <points ref={pointsRef} geometry={pointGeometry} material={pointMaterial} />
       <lineSegments ref={linesRef} geometry={lineGeometry} material={lineMaterial} />
       <points ref={glowRef} geometry={glowGeometry} material={glowMaterial} />

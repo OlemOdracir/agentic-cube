@@ -57,7 +57,7 @@ export function WaveFieldShowcase() {
           <span>{variant === 'city' ? 'CITY-CORRIDOR' : 'WAVE-FIELD'}</span>
           <small>
             {variant === 'city'
-              ? '?bg=city · vector street · moving signals'
+              ? '?bg=city · vector street · lamp glow'
               : '?bg=only · plexus topography · particles + distance lines'}
           </small>
         </div>
