@@ -411,6 +411,7 @@ export function PremiumCubePrototype() {
         >
           <Suspense fallback={null}>
             <CubeScene
+              activeSectionId={activeSectionId}
               effects={effects}
               onCursorModeChange={setCursorMode}
               onSectionEnter={(sectionId) => {

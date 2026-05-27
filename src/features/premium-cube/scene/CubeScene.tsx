@@ -15,6 +15,7 @@ import type { CubeSectionId } from '../cubeSections'
 import type { CubeSection } from '../cubeSections'
 import type { DiagnosticFx } from '../diagnosticFx'
 import { CampusEnvironment } from './CampusEnvironment'
+import { CityCorridorField } from './CityCorridorField'
 import { PremiumCube } from './PremiumCube'
 import { WaveField } from './WaveField'
 
@@ -28,6 +29,7 @@ type CubeSceneProps = {
   onSectionEnter: (sectionId: CubeSectionId) => void
   sectionOpen: boolean
   sections: CubeSection[]
+  activeSectionId: CubeSectionId
   handleRef?: RefObject<CubeSceneHandle | null>
 }
 
@@ -136,7 +138,7 @@ function PlatformTicks({ radius, count, faint = false }: PlatformTicksProps) {
   )
 }
 
-export function CubeScene({ effects, onCursorModeChange, onSectionEnter, sectionOpen, sections, handleRef }: CubeSceneProps) {
+export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSectionEnter, sectionOpen, sections, handleRef }: CubeSceneProps) {
   const rigRef = useRef<Group>(null)
   const platformGlowTexture = useMemo(
     () => createGlowTexture('rgba(180, 170, 255, 0.85)', 'rgba(110, 96, 230, 0.32)'),
@@ -536,7 +538,11 @@ export function CubeScene({ effects, onCursorModeChange, onSectionEnter, section
         <PlatformTicks radius={2.5} count={120} faint />
       </group>
 
-      <WaveField />
+      {activeSectionId === 'systems' ? (
+        <CityCorridorField controlsCamera={false} position={[0, 0.1, -13]} scale={1} skylineDepthTest fogLines={false} />
+      ) : (
+        <WaveField />
+      )}
 
       <mesh position={[0, 4.6, -0.4]}>
         <planeGeometry args={[0.9, 5]} />

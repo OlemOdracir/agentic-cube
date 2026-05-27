@@ -14,6 +14,7 @@ import {
   SRGBColorSpace,
   Vector3,
 } from 'three'
+import type { Euler, Vector3Tuple } from 'three'
 import {
   DEPTH_FADE_FAR,
   DEPTH_FADE_NEAR,
@@ -185,6 +186,18 @@ function CameraLookAt() {
     camera.lookAt(target)
   })
   return null
+}
+
+type CityCorridorFieldProps = {
+  controlsCamera?: boolean
+  position?: Vector3Tuple
+  rotation?: Euler | Vector3Tuple
+  scale?: number | Vector3Tuple
+  skylineDepthTest?: boolean
+  // When embedded behind the cube the host scene's aggressive fog erases the
+  // corridor lines; set false there so the whole city shows, not just the
+  // fog-free skyline.
+  fogLines?: boolean
 }
 
 function buildCityGraph() {
@@ -724,7 +737,14 @@ const GLOW_FRAGMENT = /* glsl */ `
   }
 `
 
-export function CityCorridorField() {
+export function CityCorridorField({
+  controlsCamera = true,
+  position = [0, 0, 0],
+  rotation = [0, 0, 0],
+  scale = 1,
+  skylineDepthTest = false,
+  fogLines = true,
+}: CityCorridorFieldProps) {
   const graph = useMemo(() => buildCityGraph(), [])
 
   const pointGeometry = useMemo(() => {
@@ -806,9 +826,10 @@ export function CityCorridorField() {
         transparent: true,
         depthTest: true,
         depthWrite: true,
+        fog: fogLines,
         blending: AdditiveBlending,
       }),
-    [],
+    [fogLines],
   )
 
   const skylineMaterial = useMemo(
@@ -816,12 +837,12 @@ export function CityCorridorField() {
       new LineBasicMaterial({
         vertexColors: true,
         transparent: true,
-        depthTest: false,
+        depthTest: skylineDepthTest,
         depthWrite: false,
         fog: false,
         blending: AdditiveBlending,
       }),
-    [],
+    [skylineDepthTest],
   )
 
   const pointsRef = useRef<Points>(null)
@@ -954,11 +975,13 @@ export function CityCorridorField() {
 
   return (
     <>
-      <CameraLookAt />
-      <lineSegments geometry={skylineGeometry} material={skylineMaterial} renderOrder={-1} />
-      <points ref={pointsRef} geometry={pointGeometry} material={pointMaterial} />
-      <lineSegments ref={linesRef} geometry={lineGeometry} material={lineMaterial} />
-      <points ref={glowRef} geometry={glowGeometry} material={glowMaterial} />
+      {controlsCamera && <CameraLookAt />}
+      <group position={position} rotation={rotation} scale={scale}>
+        <lineSegments geometry={skylineGeometry} material={skylineMaterial} renderOrder={-1} />
+        <points ref={pointsRef} geometry={pointGeometry} material={pointMaterial} />
+        <lineSegments ref={linesRef} geometry={lineGeometry} material={lineMaterial} />
+        <points ref={glowRef} geometry={glowGeometry} material={glowMaterial} />
+      </group>
     </>
   )
 }
