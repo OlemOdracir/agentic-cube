@@ -60,11 +60,9 @@ export const WORLD_REGISTRY: Record<CubeSectionId, WorldEntry> = {
     caption: 'low-poly páramo + araucaria silhouettes (stars pending)',
     Component: ResearchWorld,
     showcase: {
-      // Wide FOV, slightly elevated, looking toward the mountain horizon so
-      // the foreground páramo fills the lower half and peaks dominate the back.
       camera: { position: [0, 1.2, 7.0], fov: 62, near: 0.1, far: 100 },
-      fog: { near: 14, far: 58 },
-      lookAt: [0, 0.6, -20],
+      fog: { near: 12, far: 55 },
+      lookAt: [0, 0.0, -18],
     },
   },
   contact: {
