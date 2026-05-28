@@ -1,8 +1,10 @@
-# Production Roadmap
+# Roadmap
+
+Loaded on demand. Tracks phases, planned components, and the future admin panel design.
 
 ## Phase 0: Concept Lock
 
-Status: in progress.
+Status: complete (prototype scaffolded; spec-driven discipline starts Phase 2).
 
 - Premium cube as persistent focal element (not a one-shot portal).
 - Obsidian visual direction with violet volumetric ambient.
@@ -45,12 +47,19 @@ Suggested specs:
 
 Goal: make content editable without changing code.
 
-- Authenticated admin.
-- Content CRUD.
+- Authenticated admin (MFA required).
+- Content CRUD over the same Zod-validated schema used by static JSON files.
 - Preview before publish.
 - Schema validation.
 - Audit trail.
 - Safe publishing flow.
+
+Publishing flow:
+
+1. Admin edits private content.
+2. Content is validated against schema.
+3. Content is published as JSON to the static content path.
+4. Public site reads published JSON.
 
 ## Phase 4: AWS Production Architecture
 
@@ -66,6 +75,20 @@ Possible architecture:
 - Secrets Manager or Parameter Store.
 - WAF if public dynamic endpoints become meaningful.
 - CI/CD through GitHub Actions.
+
+## Planned Tailwind Components
+
+Reusable components to introduce as static pages and admin UI mature:
+
+- `StaticPageShell`
+- `SectionHero`
+- `ProjectEntry`
+- `CapabilityBlock`
+- `ResearchNote`
+- `ContactPanel`
+- `LanguageToggle`
+
+All must follow tokens and rules in `docs/visual-direction.md`.
 
 ## Security Baseline
 

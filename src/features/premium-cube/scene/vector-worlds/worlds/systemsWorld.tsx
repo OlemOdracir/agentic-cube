@@ -4,127 +4,86 @@ import {
   AdditiveBlending,
   BufferAttribute,
   BufferGeometry,
-  CanvasTexture,
-  Color,
   LineBasicMaterial,
-  LinearFilter,
-  LineSegments,
-  Points,
-  ShaderMaterial,
-  SRGBColorSpace,
   Vector3,
 } from 'three'
-import type { Euler, Vector3Tuple } from 'three'
+import type { Euler, LineSegments, Points, Vector3Tuple } from 'three'
 import {
-  VECTOR_WORLD_PRESETS,
-  VECTOR_WORLD_RENDERING,
-  VECTOR_WORLD_STYLE,
-} from './vectorWorldConfig'
+  createDepthPointMaterial,
+  createGlowMaterial,
+  createVectorLineMaterial,
+} from '../base/materials'
+import {
+  createDotTexture,
+  createGlowTexture,
+  makeSeededRandom,
+} from '../base/textures'
+import { VECTOR_WORLD_THEME } from '../base/theme'
+import type { WorldProps } from '../types'
 
-const CITY_FIELD = VECTOR_WORLD_PRESETS.city.field
+// ── World-local config ────────────────────────────────────────────────────────
 
-const {
-  depthFadeFar: DEPTH_FADE_FAR,
-  depthFadeNear: DEPTH_FADE_NEAR,
-  lineGlobalIntensity: LINE_GLOBAL_INTENSITY,
-  pointAlphaBase: POINT_ALPHA_BASE,
-  pointAlphaCrest: POINT_ALPHA_CREST,
-  pointSizeFactor: POINT_SIZE_FACTOR,
-} = VECTOR_WORLD_RENDERING
+const CONFIG = {
+  farZ: -28,
+  nearZ: 13,
+  roadRows: 64,
+  roadCols: 19,
+  buildingCountPerSide: 18,
+  treeCountPerSide: 11,
+  vehicleCount: 6,
+  corridorSpeed: 0.82,
+  roadHalfWidthFar: 0.72,
+  roadHalfWidthNear: 2.45,
+  sidewalkBands: 3,
+  lampCurbOffset: 0.22,
+  lampGlowSizeMultiplier: 5.6,
+  skylineGroundY: -1.0,
+  skylineXSpan: 13,
+  skylineIntensity: 0.34,
+  skylineLayers: [
+    [-44, 0.4],
+    [-39, 0.62],
+    [-34, 0.85],
+  ] as ReadonlyArray<readonly [number, number]>,
+} as const
 
-const {
-  lampGlowColor: LAMP_GLOW_COLOR,
-  lineColorRgb: LINE_COLOR_RGB,
-  particleColor: PARTICLE_COLOR,
-} = VECTOR_WORLD_STYLE
-
-const FAR_Z = CITY_FIELD.farZ
-// Recycle point sits behind the camera (city camera is at z≈10.8) so the
-// wrap-around happens off-screen: elements fly past and exit at the frame
-// edges instead of snapping back toward the center while still visible.
-const NEAR_Z = CITY_FIELD.nearZ
+const FAR_Z = CONFIG.farZ
+const NEAR_Z = CONFIG.nearZ
 const DEPTH = NEAR_Z - FAR_Z
-const ROAD_ROWS = CITY_FIELD.roadRows
-const ROAD_COLS = CITY_FIELD.roadCols
-const BUILDING_COUNT_PER_SIDE = CITY_FIELD.buildingCountPerSide
-const TREE_COUNT_PER_SIDE = CITY_FIELD.treeCountPerSide
-const VEHICLE_COUNT = CITY_FIELD.vehicleCount
-const CORRIDOR_SPEED = CITY_FIELD.corridorSpeed
-const ROAD_HALF_WIDTH_FAR = CITY_FIELD.roadHalfWidthFar
-const ROAD_HALF_WIDTH_NEAR = CITY_FIELD.roadHalfWidthNear
-const SIDEWALK_BANDS = CITY_FIELD.sidewalkBands
-const LAMP_CURB_OFFSET = CITY_FIELD.lampCurbOffset
+const ROAD_ROWS = CONFIG.roadRows
+const ROAD_COLS = CONFIG.roadCols
+const BUILDING_COUNT_PER_SIDE = CONFIG.buildingCountPerSide
+const TREE_COUNT_PER_SIDE = CONFIG.treeCountPerSide
+const VEHICLE_COUNT = CONFIG.vehicleCount
+const CORRIDOR_SPEED = CONFIG.corridorSpeed
+const ROAD_HALF_WIDTH_FAR = CONFIG.roadHalfWidthFar
+const ROAD_HALF_WIDTH_NEAR = CONFIG.roadHalfWidthNear
+const SIDEWALK_BANDS = CONFIG.sidewalkBands
+const LAMP_CURB_OFFSET = CONFIG.lampCurbOffset
 
-// Lamp glow appearance
-const LAMP_GLOW_SIZE_FACTOR = POINT_SIZE_FACTOR * CITY_FIELD.lampGlowSizeMultiplier
+const SKYLINE_GROUND_Y = CONFIG.skylineGroundY
+const SKYLINE_X_SPAN = CONFIG.skylineXSpan
+const SKYLINE_INTENSITY = CONFIG.skylineIntensity
+const SKYLINE_LAYERS = CONFIG.skylineLayers
 
-// Distant skyline backdrop — its own fog-free layer so a dense city of
-// huge-but-far towers reads on the horizon instead of dissolving into fog.
-const SKYLINE_GROUND_Y = CITY_FIELD.skylineGroundY
-const SKYLINE_X_SPAN = CITY_FIELD.skylineXSpan
-const SKYLINE_INTENSITY = CITY_FIELD.skylineIntensity
-// [z depth, brightness] per receding layer (farther = dimmer)
-const SKYLINE_LAYERS = CITY_FIELD.skylineLayers
+const LINE_COLOR_RGB = VECTOR_WORLD_THEME.lineColorRgb
+const LINE_GLOBAL_INTENSITY = VECTOR_WORLD_THEME.lineGlobalIntensity
+
 // Fake atmospheric perspective: bases dissolve into the dark horizon, only the
-// upper silhouettes read — keeps the fog-free backdrop from over-asserting.
+// upper silhouettes read.
 function skylineHeightFade(y: number) {
   return 0.12 + Math.min(1, (y - SKYLINE_GROUND_Y) / 3.4) * 0.88
 }
 
 type CityNode =
-  | {
-      kind: 'road'
-      row: number
-      col: number
-      x: number
-    }
-  | {
-      kind: 'sidewalk'
-      row: number
-      side: -1 | 1
-      band: number
-    }
-  | {
-      kind: 'building'
-      baseZ: number
-      centerX: number
-      localX: number
-      localY: number
-      localZ: number
-      speed: number
-    }
-  | {
-      kind: 'tree'
-      baseZ: number
-      centerX: number
-      localX: number
-      localY: number
-      localZ: number
-      speed: number
-    }
-  | {
-      kind: 'lamp'
-      baseZ: number
-      side: -1 | 1
-      localX: number
-      localY: number
-      localZ: number
-    }
-  | {
-      kind: 'vehicle'
-      baseZ: number
-      laneX: number
-      speed: number
-      lx: number
-      ly: number
-      lz: number
-    }
+  | { kind: 'road'; row: number; col: number; x: number }
+  | { kind: 'sidewalk'; row: number; side: -1 | 1; band: number }
+  | { kind: 'building'; baseZ: number; centerX: number; localX: number; localY: number; localZ: number; speed: number }
+  | { kind: 'tree'; baseZ: number; centerX: number; localX: number; localY: number; localZ: number; speed: number }
+  | { kind: 'lamp'; baseZ: number; side: -1 | 1; localX: number; localY: number; localZ: number }
+  | { kind: 'vehicle'; baseZ: number; laneX: number; speed: number; lx: number; ly: number; lz: number }
 
-type LinePair = {
-  a: number
-  b: number
-  strength: number
-}
+type LinePair = { a: number; b: number; strength: number }
 
 function wrapDepth(z: number) {
   return FAR_Z + ((((z - FAR_Z) % DEPTH) + DEPTH) % DEPTH)
@@ -138,73 +97,12 @@ function lateralScale(near: number) {
   return 0.72 + near * 0.22
 }
 
-function seeded(seed: number) {
-  let state = seed >>> 0
-  return () => {
-    state = (state * 1664525 + 1013904223) >>> 0
-    return state / 0x100000000
-  }
-}
-
-function createDotTexture() {
-  const s = 64
-  const canvas = document.createElement('canvas')
-  canvas.width = s
-  canvas.height = s
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return null
-  const gradient = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2)
-  gradient.addColorStop(0, 'rgba(255,255,255,1)')
-  gradient.addColorStop(0.34, 'rgba(220,210,255,0.55)')
-  gradient.addColorStop(1, 'rgba(0,0,0,0)')
-  ctx.fillStyle = gradient
-  ctx.fillRect(0, 0, s, s)
-  const texture = new CanvasTexture(canvas)
-  texture.colorSpace = SRGBColorSpace
-  texture.magFilter = LinearFilter
-  texture.minFilter = LinearFilter
-  return texture
-}
-
-function createGlowTexture() {
-  const s = 128
-  const canvas = document.createElement('canvas')
-  canvas.width = s
-  canvas.height = s
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return null
-  const gradient = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2)
-  gradient.addColorStop(0, 'rgba(255,255,255,0.92)')
-  gradient.addColorStop(0.12, 'rgba(230,218,255,0.48)')
-  gradient.addColorStop(0.4, 'rgba(160,130,255,0.13)')
-  gradient.addColorStop(1, 'rgba(0,0,0,0)')
-  ctx.fillStyle = gradient
-  ctx.fillRect(0, 0, s, s)
-  const texture = new CanvasTexture(canvas)
-  texture.colorSpace = SRGBColorSpace
-  texture.magFilter = LinearFilter
-  texture.minFilter = LinearFilter
-  return texture
-}
-
 function CameraLookAt() {
   const target = useMemo(() => new Vector3(0, 0.04, -8.5), [])
   useFrame(({ camera }) => {
     camera.lookAt(target)
   })
   return null
-}
-
-type CityCorridorFieldProps = {
-  controlsCamera?: boolean
-  position?: Vector3Tuple
-  rotation?: Euler | Vector3Tuple
-  scale?: number | Vector3Tuple
-  skylineDepthTest?: boolean
-  // When embedded behind the cube the host scene's aggressive fog erases the
-  // corridor lines; set false there so the whole city shows, not just the
-  // fog-free skyline.
-  fogLines?: boolean
 }
 
 function buildCityGraph() {
@@ -240,9 +138,6 @@ function buildCityGraph() {
   for (let col = 0; col < ROAD_COLS; col += 1) {
     const isCurb = col === 0 || col === ROAD_COLS - 1
     const isCenter = col === Math.floor(ROAD_COLS / 2)
-    // Wrap the last row back to the first so the scrolling ring has no seam gap;
-    // the wrapGap cull below hides whichever segment straddles the reset (it sits
-    // behind the camera). Without this the missing 63→0 link drifts as a visible cut.
     for (let row = 0; row < ROAD_ROWS; row += 1) {
       pairs.push({
         a: roadIndex[row][col],
@@ -272,10 +167,9 @@ function buildCityGraph() {
     }
   }
 
-  const rand = seeded(0x5157c17)
+  const rand = makeSeededRandom(0x5157c17)
   for (const side of [-1, 1] as const) {
     for (let i = 0; i < BUILDING_COUNT_PER_SIDE; i += 1) {
-      // A couple of taller "landmark" towers break the left/right symmetry.
       const isLandmark = (side === -1 && i === 5) || (side === 1 && i === 13)
       const width = (0.85 + rand() * 1.2) * (isLandmark ? 1.35 : 1)
       const depth = (0.9 + rand() * 1.55) * (isLandmark ? 1.2 : 1)
@@ -298,51 +192,19 @@ function buildCityGraph() {
           const localY = y
           const localZ = -depth / 2 + (cell / horizontalCells) * depth
           frontGrid[level][cell] =
-            nodes.push({
-              kind: 'building',
-              baseZ,
-              centerX,
-              localX: frontX,
-              localY,
-              localZ,
-              speed,
-            }) - 1
+            nodes.push({ kind: 'building', baseZ, centerX, localX: frontX, localY, localZ, speed }) - 1
           rearGrid[level][cell] =
-            nodes.push({
-              kind: 'building',
-              baseZ,
-              centerX,
-              localX: rearX,
-              localY,
-              localZ,
-              speed,
-            }) - 1
+            nodes.push({ kind: 'building', baseZ, centerX, localX: rearX, localY, localZ, speed }) - 1
         }
       }
 
       for (let level = 0; level <= levels; level += 1) {
         for (let corner = 0; corner < frontGrid[level].length - 1; corner += 1) {
-          pairs.push({
-            a: frontGrid[level][corner],
-            b: frontGrid[level][corner + 1],
-            strength: level === levels ? 0.58 : 0.34,
-          })
-          pairs.push({
-            a: rearGrid[level][corner],
-            b: rearGrid[level][corner + 1],
-            strength: level === levels ? 0.36 : 0.22,
-          })
+          pairs.push({ a: frontGrid[level][corner], b: frontGrid[level][corner + 1], strength: level === levels ? 0.58 : 0.34 })
+          pairs.push({ a: rearGrid[level][corner], b: rearGrid[level][corner + 1], strength: level === levels ? 0.36 : 0.22 })
           if (level < levels) {
-            pairs.push({
-              a: frontGrid[level][corner],
-              b: frontGrid[level + 1][corner],
-              strength: 0.46,
-            })
-            pairs.push({
-              a: rearGrid[level][corner],
-              b: rearGrid[level + 1][corner],
-              strength: 0.28,
-            })
+            pairs.push({ a: frontGrid[level][corner], b: frontGrid[level + 1][corner], strength: 0.46 })
+            pairs.push({ a: rearGrid[level][corner], b: rearGrid[level + 1][corner], strength: 0.28 })
           }
         }
       }
@@ -423,8 +285,7 @@ function buildCityGraph() {
         pairs.push({ a: trunkBottom, b: root, strength: 0.36 })
       }
 
-      // Canopy as a layered dome: stacked rings joined by vertical struts plus an
-      // apex, so it reads as foliage volume instead of a sparse lollipop burst.
+      // Canopy as stacked rings joined by struts — reads as foliage volume, not a sparse burst.
       const canopyBaseY = -1.02 + trunkHeight
       const segments = 10
       const ringProfile = [
@@ -458,9 +319,7 @@ function buildCityGraph() {
       for (let ring = 0; ring < rings.length; ring += 1) {
         const ringNodes = rings[ring]
         for (let s = 0; s < segments; s += 1) {
-          // Horizontal ring loop.
           pairs.push({ a: ringNodes[s], b: ringNodes[(s + 1) % segments], strength: 0.86 })
-          // Vertical struts to the ring above (gives the dome its volume).
           if (ring < rings.length - 1) {
             pairs.push({ a: ringNodes[s], b: rings[ring + 1][s], strength: 0.46 })
             if (s % 2 === 0) {
@@ -469,7 +328,6 @@ function buildCityGraph() {
           }
         }
       }
-      // Trunk into the lowest ring, apex crowning the top ring.
       for (let s = 0; s < segments; s += 1) {
         if (s % 2 === 0) pairs.push({ a: trunkTop, b: rings[0][s], strength: 0.4 })
         pairs.push({ a: apex, b: rings[rings.length - 1][s], strength: 0.34 })
@@ -495,7 +353,6 @@ function buildCityGraph() {
       const lamp = (lx: number, ly: number, lz: number) =>
         nodes.push({ kind: 'lamp', baseZ, side, localX: lx, localY: ly, localZ: lz }) - 1
 
-      // Tapered plinth footing.
       const pr = 0.07
       const plinthGround = corners.map(([dx, dz]) => lamp(xOffset + dx * pr, baseY, dz * pr))
       const plinthTop = corners.map(([dx, dz]) => lamp(xOffset + dx * pr * 0.66, baseY + 0.16, dz * pr * 0.66))
@@ -505,7 +362,6 @@ function buildCityGraph() {
         pairs.push({ a: plinthGround[k], b: plinthTop[k], strength: 0.46 })
       }
 
-      // Pole + curved arm reaching over the street.
       const poleBase = lamp(xOffset, baseY + 0.16, 0)
       const poleMid = lamp(xOffset, baseY + poleHeight * 0.55, 0)
       const poleTop = lamp(xOffset, baseY + poleHeight, 0)
@@ -517,7 +373,6 @@ function buildCityGraph() {
       pairs.push({ a: armMid, b: armEnd, strength: 0.82 })
       for (let k = 0; k < 4; k += 1) pairs.push({ a: plinthTop[k], b: poleBase, strength: 0.32 })
 
-      // Luminaire: a small ring tapering down to a glowing bulb.
       const lr = 0.055
       const lanternY = baseY + poleHeight * 0.9
       const lanternRing = corners.map(([dx, dz]) => lamp(headX + dx * lr, lanternY, dz * lr))
@@ -530,7 +385,6 @@ function buildCityGraph() {
 
       lampHeadIndices.push(bulb)
 
-      // Faint light cone projecting onto the pavement (vector-style glow).
       const poolR = 0.36
       const poolSeg = 6
       const poolNodes: number[] = []
@@ -545,9 +399,7 @@ function buildCityGraph() {
     }
   }
 
-  // Wireframe traffic flowing toward the camera. Bodies scale with the lane so
-  // they shrink with distance and recycle behind the camera like everything else.
-  // Front corners feed the lamp-glow system as headlights. +lz is toward camera.
+  // Wireframe traffic with front corners doubling as headlights.
   const vehicleNode =
     (laneX: number, speed: number, baseZ: number) => (lx: number, ly: number, lz: number) =>
       nodes.push({ kind: 'vehicle', baseZ, laneX, speed, lx, ly, lz }) - 1
@@ -575,7 +427,6 @@ function buildCityGraph() {
     }
   }
 
-  // Cars: low body + cabin.
   const carLanes = [-0.66, -0.34, 0.34, 0.66]
   for (let i = 0; i < VEHICLE_COUNT; i += 1) {
     const v = vehicleNode(carLanes[i % carLanes.length], CORRIDOR_SPEED * (1.35 + rand() * 0.9), FAR_Z + (i / VEHICLE_COUNT) * DEPTH)
@@ -584,7 +435,6 @@ function buildCityGraph() {
     lampHeadIndices.push(v(-0.125, 0.09, 0.4), v(0.125, 0.09, 0.4))
   }
 
-  // One delivery truck: tall cargo box behind a lower cab.
   {
     const v = vehicleNode(0.5, CORRIDOR_SPEED * 1.28, FAR_Z + 0.42 * DEPTH)
     makeBox(v, 0.22, 0, 0.64, -0.78, 0.23, 0.74)
@@ -592,7 +442,6 @@ function buildCityGraph() {
     lampHeadIndices.push(v(-0.13, 0.09, 0.78), v(0.13, 0.09, 0.78))
   }
 
-  // One bus: long tall box with a window band down each side.
   {
     const v = vehicleNode(-0.5, CORRIDOR_SPEED * 1.18, FAR_Z + 0.78 * DEPTH)
     makeBox(v, 0.22, 0, 0.55, -0.87, 0.87, 0.74)
@@ -605,11 +454,9 @@ function buildCityGraph() {
   return { nodes, pairs, lampHeadIndices }
 }
 
-// Static, fog-free backdrop: dense rows of boxy towers across several receding
-// layers. Returns baked line-segment positions + per-vertex colors so a far
-// "downtown" silhouette reads on the horizon without any per-frame work.
+// Baked, fog-free far-horizon silhouettes — adds depth without per-frame cost.
 function buildSkyline() {
-  const rand = seeded(0xc1745)
+  const rand = makeSeededRandom(0xc1745)
   const positions: number[] = []
   const colors: number[] = []
 
@@ -636,12 +483,10 @@ function buildSkyline() {
       const roof = rand()
 
       if (roof < 0.46) {
-        // Flat-top box.
         edge(z, left, SKYLINE_GROUND_Y, left, top, brightness)
         edge(z, left, top, right, top, brightness)
         edge(z, right, top, right, SKYLINE_GROUND_Y, brightness)
       } else if (roof < 0.78) {
-        // Stepped setback: full-width base, narrower crown.
         const shoulder = SKYLINE_GROUND_Y + height * (0.62 + rand() * 0.14)
         const inset = w * (0.18 + rand() * 0.12)
         const cl = left + inset
@@ -654,7 +499,6 @@ function buildSkyline() {
         edge(z, cr, shoulder, cr, top, brightness)
         edge(z, cl, top, cr, top, brightness)
       } else {
-        // Tapered crown: walls rise then narrow to a small roof edge.
         const shoulder = SKYLINE_GROUND_Y + height * 0.74
         const inset = w * (0.28 + rand() * 0.12)
         const tl = left + inset
@@ -666,7 +510,6 @@ function buildSkyline() {
         edge(z, tl, top, tr, top, brightness)
       }
 
-      // Floor hints + a roof antenna for the tall ones, to read as real buildings.
       if (height > 4) {
         const mid = SKYLINE_GROUND_Y + height * 0.52
         edge(z, left, mid, right, mid, brightness * 0.55)
@@ -682,76 +525,21 @@ function buildSkyline() {
   return { positions: new Float32Array(positions), colors: new Float32Array(colors) }
 }
 
-// ── Shaders ───────────────────────────────────────────────────────────────────
+type SystemsWorldProps = WorldProps & {
+  controlsCamera?: boolean
+  fogLines?: boolean
+  skylineDepthTest?: boolean
+}
 
-const POINTS_VERTEX = /* glsl */ `
-  uniform float uPixelRatio;
-  uniform float uPointSizeFactor;
-  varying float vDepth;
-  varying float vHeight;
-  void main() {
-    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-    vDepth = -mvPosition.z;
-    vHeight = position.y;
-    gl_Position = projectionMatrix * mvPosition;
-    gl_PointSize = (uPointSizeFactor / vDepth) * uPixelRatio * (0.95 + smoothstep(-1.1, 2.8, vHeight) * 0.48);
-  }
-`
-
-const POINTS_FRAGMENT = /* glsl */ `
-  uniform vec3 uColor;
-  uniform sampler2D uMap;
-  uniform float uDepthNear;
-  uniform float uDepthFar;
-  uniform float uAlphaBase;
-  uniform float uAlphaCrest;
-  varying float vDepth;
-  varying float vHeight;
-  void main() {
-    vec4 sprite = texture2D(uMap, gl_PointCoord);
-    float depthFade = mix(1.0, 0.06, smoothstep(uDepthNear, uDepthFar, vDepth));
-    float nearFade = smoothstep(1.0, 2.8, vDepth);
-    float heightBoost = smoothstep(-0.6, 2.8, vHeight);
-    float alpha = sprite.a * (uAlphaBase + heightBoost * uAlphaCrest) * depthFade * nearFade * 1.25;
-    gl_FragColor = vec4(uColor * (0.72 + depthFade * 0.42), alpha);
-  }
-`
-
-const GLOW_VERTEX = /* glsl */ `
-  uniform float uPixelRatio;
-  uniform float uPointSizeFactor;
-  varying float vDepth;
-  void main() {
-    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-    vDepth = -mvPosition.z;
-    gl_Position = projectionMatrix * mvPosition;
-    gl_PointSize = (uPointSizeFactor / vDepth) * uPixelRatio;
-  }
-`
-
-const GLOW_FRAGMENT = /* glsl */ `
-  uniform vec3 uColor;
-  uniform sampler2D uMap;
-  uniform float uDepthNear;
-  uniform float uDepthFar;
-  varying float vDepth;
-  void main() {
-    vec4 sprite = texture2D(uMap, gl_PointCoord);
-    float depthFade = mix(1.0, 0.02, smoothstep(uDepthNear, uDepthFar, vDepth));
-    float nearFade = smoothstep(1.2, 3.5, vDepth);
-    float alpha = sprite.a * 0.3 * depthFade * nearFade;
-    gl_FragColor = vec4(uColor, alpha);
-  }
-`
-
-export function CityCorridorField({
-  controlsCamera = true,
-  position = [0, 0, 0],
-  rotation = [0, 0, 0],
+export function SystemsWorld({
+  // Embedded defaults are tuned for the cube scene's camera at [0, 0.78, 7.6].
+  position = [0, 0.1, -13],
+  rotation = [0, 0, 0] as Vector3Tuple,
   scale = 1,
-  skylineDepthTest = false,
-  fogLines = true,
-}: CityCorridorFieldProps) {
+  controlsCamera = false,
+  fogLines = false,
+  skylineDepthTest = true,
+}: SystemsWorldProps = {}) {
   const graph = useMemo(() => buildCityGraph(), [])
 
   const pointGeometry = useMemo(() => {
@@ -784,58 +572,20 @@ export function CityCorridorField({
   const dotTexture = useMemo(() => createDotTexture(), [])
   const glowTexture = useMemo(() => createGlowTexture(), [])
 
-  const pointMaterial = useMemo(
-    () =>
-      new ShaderMaterial({
-        vertexShader: POINTS_VERTEX,
-        fragmentShader: POINTS_FRAGMENT,
-        transparent: true,
-        depthWrite: false,
-        blending: AdditiveBlending,
-        uniforms: {
-          uColor: { value: new Color(PARTICLE_COLOR) },
-          uMap: { value: dotTexture },
-          uPixelRatio: { value: Math.min(window.devicePixelRatio ?? 1, 2) },
-          uPointSizeFactor: { value: POINT_SIZE_FACTOR * 1.08 },
-          uAlphaBase: { value: POINT_ALPHA_BASE },
-          uAlphaCrest: { value: POINT_ALPHA_CREST * 0.9 },
-          uDepthNear: { value: DEPTH_FADE_NEAR },
-          uDepthFar: { value: DEPTH_FADE_FAR + 8 },
-        },
-      }),
-    [dotTexture],
-  )
+  const pointMaterial = useMemo(() => createDepthPointMaterial({ dotTexture }), [dotTexture])
 
   const glowMaterial = useMemo(
     () =>
-      new ShaderMaterial({
-        vertexShader: GLOW_VERTEX,
-        fragmentShader: GLOW_FRAGMENT,
-        transparent: true,
-        depthWrite: false,
-        blending: AdditiveBlending,
-        uniforms: {
-          uColor: { value: new Color(LAMP_GLOW_COLOR) },
-          uMap: { value: glowTexture },
-          uPixelRatio: { value: Math.min(window.devicePixelRatio ?? 1, 2) },
-          uPointSizeFactor: { value: LAMP_GLOW_SIZE_FACTOR },
-          uDepthNear: { value: DEPTH_FADE_NEAR },
-          uDepthFar: { value: DEPTH_FADE_FAR + 8 },
-        },
+      createGlowMaterial({
+        glowTexture,
+        color: VECTOR_WORLD_THEME.lampGlowColor,
+        pointSizeFactor: VECTOR_WORLD_THEME.pointSizeFactor * CONFIG.lampGlowSizeMultiplier,
       }),
     [glowTexture],
   )
 
   const lineMaterial = useMemo(
-    () =>
-      new LineBasicMaterial({
-        vertexColors: true,
-        transparent: true,
-        depthTest: true,
-        depthWrite: true,
-        fog: fogLines,
-        blending: AdditiveBlending,
-      }),
+    () => createVectorLineMaterial({ fog: fogLines, depthTest: true, depthWrite: true }),
     [fogLines],
   )
 
@@ -927,7 +677,6 @@ export function CityCorridorField({
     ;(pointPositions.array as Float32Array).set(nodePositions)
     pointPositions.needsUpdate = true
 
-    // Copy lamp head positions into glow geometry
     const glowPositionAttr = glowPoints.geometry.attributes.position as BufferAttribute
     const glowArr = glowPositionAttr.array as Float32Array
     for (let g = 0; g < graph.lampHeadIndices.length; g += 1) {
@@ -983,7 +732,7 @@ export function CityCorridorField({
   return (
     <>
       {controlsCamera && <CameraLookAt />}
-      <group position={position} rotation={rotation} scale={scale}>
+      <group position={position} rotation={rotation as Euler | Vector3Tuple} scale={scale}>
         <lineSegments geometry={skylineGeometry} material={skylineMaterial} renderOrder={-1} />
         <points ref={pointsRef} geometry={pointGeometry} material={pointMaterial} />
         <lineSegments ref={linesRef} geometry={lineGeometry} material={lineMaterial} />

@@ -2447,3 +2447,28 @@ button.side-panels__cta {
   border-color: rgba(184, 174, 255, 0.82);
   background: linear-gradient(180deg, rgba(18, 20, 38, 0.84), rgba(5, 6, 16, 0.92));
 }
+
+.wave-showcase__switcher {
+  pointer-events: auto;
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.wave-showcase__switcher a {
+  padding: 0.42rem 0.7rem;
+  font-size: 0.56rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border: 1px solid rgba(122, 109, 255, 0.22);
+  background: rgba(6, 8, 18, 0.65);
+  color: rgba(216, 218, 244, 0.58);
+}
+
+.wave-showcase__switcher a.is-active {
+  border-color: rgba(184, 174, 255, 0.92);
+  color: rgba(232, 234, 255, 0.96);
+  background: linear-gradient(180deg, rgba(34, 28, 70, 0.86), rgba(8, 6, 20, 0.92));
+  box-shadow: 0 0 0 1px rgba(184, 174, 255, 0.22) inset;
+}

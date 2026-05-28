@@ -1,16 +1,17 @@
 import { PremiumCubePrototype } from './features/premium-cube/PremiumCubePrototype'
-import { VECTOR_WORLD_PRESETS } from './features/premium-cube/scene/vectorWorldConfig'
-import { WaveFieldShowcase } from './features/premium-cube/WaveFieldShowcase'
+import { isWorldId } from './features/premium-cube/scene/vector-worlds/registry'
+import { VectorWorldShowcase } from './features/premium-cube/VectorWorldShowcase'
 import './App.css'
 
 function readBgShowcaseFlag() {
   if (typeof window === 'undefined') return false
   const bg = new URLSearchParams(window.location.search).get('bg')
-  return bg === 'only' || (typeof bg === 'string' && bg in VECTOR_WORLD_PRESETS)
+  if (!bg) return false
+  return bg === 'only' || isWorldId(bg)
 }
 
 function App() {
-  return readBgShowcaseFlag() ? <WaveFieldShowcase /> : <PremiumCubePrototype />
+  return readBgShowcaseFlag() ? <VectorWorldShowcase /> : <PremiumCubePrototype />
 }
 
 export default App

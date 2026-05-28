@@ -157,11 +157,24 @@ Working palette:
 - Per-face cube glyph divergence: all six faces share the same diamond glyph and surface grammar; only the section label changes.
 - Full-page section overlays that hide the cube (the cube must remain visible in the primary experience).
 
-## Tailwind Policy
+## Tailwind Implementation
 
-Tailwind is allowed and recommended for the static pages and future admin UI, but only after tokens and rules are defined.
+Tailwind is the implementation layer for static pages and future admin UI. It must follow the Obsidian Interface System above.
 
-- Tailwind should implement the visual system, not replace it.
-- Avoid arbitrary colors except for documented exceptions.
-- Keep Three.js/canvas visuals controlled by scene code.
-- Prefer reusable components for repeated page patterns.
+Setup:
+
+- Tailwind v4 installed via `@tailwindcss/vite`.
+- Tokens defined in `src/index.css` using Tailwind v4 `@theme` (mirrors the Color Tokens section above).
+- Three.js scene styling stays controlled by scene code and focused CSS — Tailwind does not improvise around the cube material or 3D scene.
+
+Token rules:
+
+- Use project tokens first (`obsidian-950/900/800`, `ice-300/100`, `mineral-500`, `copper-400`, `glass-line`).
+- Avoid arbitrary colors unless there is a documented design reason.
+
+Usage rules:
+
+- Use Tailwind for static page layouts, typography, spacing, and future admin UI.
+- Prefer reusable React components for repeated page patterns (planned components tracked in `docs/roadmap.md`).
+- Do not introduce generic SaaS/landing-page visual patterns.
+- Keep pages semantic and readable for recruiters and AI parsers.
