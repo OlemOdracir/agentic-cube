@@ -13,31 +13,42 @@ import {
 } from 'three'
 import type { Group, LineSegments, Points } from 'three'
 import {
-  CREST_BOOST_HIGH,
-  CREST_BOOST_LOW,
-  DEPTH_FADE_FAR,
-  DEPTH_FADE_NEAR,
-  FIELD_DEPTH,
-  FIELD_WIDTH,
-  HORIZON_GLOW_COLOR,
-  HORIZON_GLOW_OPACITY,
-  JITTER_RATIO,
-  LINE_COLOR_RGB,
-  LINE_DISTANCE_RATIO,
-  LINE_GLOBAL_INTENSITY,
-  MAX_LINE_SEGMENTS,
-  NEIGHBOR_RADIUS_CELLS,
-  PARALLAX_X,
-  PARALLAX_Z,
-  PARTICLE_COLOR,
-  PARTICLE_COLS,
-  PARTICLE_ROWS,
-  POINT_ALPHA_BASE,
-  POINT_ALPHA_CREST,
-  POINT_SIZE_FACTOR,
-  WAVE_OCTAVES,
-  WAVE_TIME_SCALE,
-} from './waveFieldConfig'
+  VECTOR_WORLD_PRESETS,
+  VECTOR_WORLD_RENDERING,
+  VECTOR_WORLD_STYLE,
+} from './vectorWorldConfig'
+
+const WAVE_FIELD = VECTOR_WORLD_PRESETS.wave.field
+const PARTICLE_COLS = WAVE_FIELD.particleCols
+const PARTICLE_ROWS = WAVE_FIELD.particleRows
+const FIELD_WIDTH = WAVE_FIELD.fieldWidth
+const FIELD_DEPTH = WAVE_FIELD.fieldDepth
+const JITTER_RATIO = WAVE_FIELD.jitterRatio
+const LINE_DISTANCE_RATIO = WAVE_FIELD.lineDistanceRatio
+const NEIGHBOR_RADIUS_CELLS = WAVE_FIELD.neighborRadiusCells
+const MAX_LINE_SEGMENTS = WAVE_FIELD.maxLineSegments
+const WAVE_TIME_SCALE = WAVE_FIELD.waveTimeScale
+const WAVE_OCTAVES = WAVE_FIELD.octaves
+const HORIZON_GLOW_OPACITY = WAVE_FIELD.horizonGlowOpacity
+const PARALLAX_X = WAVE_FIELD.parallaxX
+const PARALLAX_Z = WAVE_FIELD.parallaxZ
+
+const {
+  crestBoostHigh: CREST_BOOST_HIGH,
+  crestBoostLow: CREST_BOOST_LOW,
+  depthFadeFar: DEPTH_FADE_FAR,
+  depthFadeNear: DEPTH_FADE_NEAR,
+  lineGlobalIntensity: LINE_GLOBAL_INTENSITY,
+  pointAlphaBase: POINT_ALPHA_BASE,
+  pointAlphaCrest: POINT_ALPHA_CREST,
+  pointSizeFactor: POINT_SIZE_FACTOR,
+} = VECTOR_WORLD_RENDERING
+
+const {
+  horizonGlowColor: HORIZON_GLOW_COLOR,
+  lineColorRgb: LINE_COLOR_RGB,
+  particleColor: PARTICLE_COLOR,
+} = VECTOR_WORLD_STYLE
 
 const PARTICLE_COUNT = PARTICLE_COLS * PARTICLE_ROWS
 

@@ -16,48 +16,55 @@ import {
 } from 'three'
 import type { Euler, Vector3Tuple } from 'three'
 import {
-  DEPTH_FADE_FAR,
-  DEPTH_FADE_NEAR,
-  LINE_COLOR_RGB,
-  LINE_GLOBAL_INTENSITY,
-  PARTICLE_COLOR,
-  POINT_ALPHA_BASE,
-  POINT_ALPHA_CREST,
-  POINT_SIZE_FACTOR,
-} from './waveFieldConfig'
+  VECTOR_WORLD_PRESETS,
+  VECTOR_WORLD_RENDERING,
+  VECTOR_WORLD_STYLE,
+} from './vectorWorldConfig'
 
-const FAR_Z = -28
+const CITY_FIELD = VECTOR_WORLD_PRESETS.city.field
+
+const {
+  depthFadeFar: DEPTH_FADE_FAR,
+  depthFadeNear: DEPTH_FADE_NEAR,
+  lineGlobalIntensity: LINE_GLOBAL_INTENSITY,
+  pointAlphaBase: POINT_ALPHA_BASE,
+  pointAlphaCrest: POINT_ALPHA_CREST,
+  pointSizeFactor: POINT_SIZE_FACTOR,
+} = VECTOR_WORLD_RENDERING
+
+const {
+  lampGlowColor: LAMP_GLOW_COLOR,
+  lineColorRgb: LINE_COLOR_RGB,
+  particleColor: PARTICLE_COLOR,
+} = VECTOR_WORLD_STYLE
+
+const FAR_Z = CITY_FIELD.farZ
 // Recycle point sits behind the camera (city camera is at z≈10.8) so the
 // wrap-around happens off-screen: elements fly past and exit at the frame
 // edges instead of snapping back toward the center while still visible.
-const NEAR_Z = 13
+const NEAR_Z = CITY_FIELD.nearZ
 const DEPTH = NEAR_Z - FAR_Z
-const ROAD_ROWS = 64
-const ROAD_COLS = 19
-const BUILDING_COUNT_PER_SIDE = 18
-const TREE_COUNT_PER_SIDE = 11
-const VEHICLE_COUNT = 6
-const CORRIDOR_SPEED = 0.82
-const ROAD_HALF_WIDTH_FAR = 0.72
-const ROAD_HALF_WIDTH_NEAR = 2.45
-const SIDEWALK_BANDS = 3
-const LAMP_CURB_OFFSET = 0.22
+const ROAD_ROWS = CITY_FIELD.roadRows
+const ROAD_COLS = CITY_FIELD.roadCols
+const BUILDING_COUNT_PER_SIDE = CITY_FIELD.buildingCountPerSide
+const TREE_COUNT_PER_SIDE = CITY_FIELD.treeCountPerSide
+const VEHICLE_COUNT = CITY_FIELD.vehicleCount
+const CORRIDOR_SPEED = CITY_FIELD.corridorSpeed
+const ROAD_HALF_WIDTH_FAR = CITY_FIELD.roadHalfWidthFar
+const ROAD_HALF_WIDTH_NEAR = CITY_FIELD.roadHalfWidthNear
+const SIDEWALK_BANDS = CITY_FIELD.sidewalkBands
+const LAMP_CURB_OFFSET = CITY_FIELD.lampCurbOffset
 
 // Lamp glow appearance
-const LAMP_GLOW_COLOR = '#f3f2f8'
-const LAMP_GLOW_SIZE_FACTOR = POINT_SIZE_FACTOR * 5.6
+const LAMP_GLOW_SIZE_FACTOR = POINT_SIZE_FACTOR * CITY_FIELD.lampGlowSizeMultiplier
 
 // Distant skyline backdrop — its own fog-free layer so a dense city of
 // huge-but-far towers reads on the horizon instead of dissolving into fog.
-const SKYLINE_GROUND_Y = -1.0
-const SKYLINE_X_SPAN = 13
-const SKYLINE_INTENSITY = 0.34
+const SKYLINE_GROUND_Y = CITY_FIELD.skylineGroundY
+const SKYLINE_X_SPAN = CITY_FIELD.skylineXSpan
+const SKYLINE_INTENSITY = CITY_FIELD.skylineIntensity
 // [z depth, brightness] per receding layer (farther = dimmer)
-const SKYLINE_LAYERS: ReadonlyArray<readonly [number, number]> = [
-  [-44, 0.4],
-  [-39, 0.62],
-  [-34, 0.85],
-]
+const SKYLINE_LAYERS = CITY_FIELD.skylineLayers
 // Fake atmospheric perspective: bases dissolve into the dark horizon, only the
 // upper silhouettes read — keeps the fog-free backdrop from over-asserting.
 function skylineHeightFade(y: number) {

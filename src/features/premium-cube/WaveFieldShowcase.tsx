@@ -1,11 +1,19 @@
 import { Suspense, useEffect, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { CityCorridorField } from './scene/CityCorridorField'
+import { VECTOR_WORLD_PRESETS, VECTOR_WORLD_STYLE } from './scene/vectorWorldConfig'
+import type { VectorWorldPreset } from './scene/vectorWorldConfig'
 import { WaveField } from './scene/WaveField'
 
+function readVectorWorldPreset(): VectorWorldPreset {
+  if (typeof window === 'undefined') return 'wave'
+  const bg = new URLSearchParams(window.location.search).get('bg')
+  return typeof bg === 'string' && bg in VECTOR_WORLD_PRESETS ? (bg as VectorWorldPreset) : 'wave'
+}
+
 export function WaveFieldShowcase() {
-  const variant =
-    typeof window === 'undefined' ? 'wave' : new URLSearchParams(window.location.search).get('bg') === 'city' ? 'city' : 'wave'
+  const variant = readVectorWorldPreset()
+  const preset = VECTOR_WORLD_PRESETS[variant]
   const [viewport, setViewport] = useState(() => ({
     width: typeof window === 'undefined' ? 0 : window.innerWidth,
     height: typeof window === 'undefined' ? 0 : window.innerHeight,
@@ -35,13 +43,13 @@ export function WaveFieldShowcase() {
         style={{ width: viewport.width || '100vw', height: viewport.height || '100vh' }}
       >
         <Canvas
-          camera={{ position: variant === 'city' ? [0, 1.9, 10.8] : [0, 0.55, 4.6], fov: variant === 'city' ? 52 : 48, near: 0.1, far: 80 }}
+          camera={preset.camera}
           dpr={[1.5, 2]}
           gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
         >
           <Suspense fallback={null}>
-            <color attach="background" args={['#08050d']} />
-            <fog attach="fog" args={['#08050d', variant === 'city' ? 14 : 9, variant === 'city' ? 40 : 28]} />
+            <color attach="background" args={[VECTOR_WORLD_STYLE.background]} />
+            <fog attach="fog" args={[VECTOR_WORLD_STYLE.background, preset.fog.near, preset.fog.far]} />
             <ambientLight intensity={0.18} />
             {variant === 'city' ? (
               <CityCorridorField />
@@ -54,14 +62,10 @@ export function WaveFieldShowcase() {
 
       <header className="wave-showcase__chrome">
         <div>
-          <span>{variant === 'city' ? 'CITY-CORRIDOR' : 'WAVE-FIELD'}</span>
-          <small>
-            {variant === 'city'
-              ? '?bg=city · vector street · lamp glow'
-              : '?bg=only · plexus topography · particles + distance lines'}
-          </small>
+          <span>{preset.label}</span>
+          <small>{preset.caption}</small>
         </div>
-        <a href={typeof window !== 'undefined' ? window.location.pathname : '/'}>← back to cube</a>
+        <a href={typeof window !== 'undefined' ? window.location.pathname : '/'}>back to cube</a>
       </header>
     </main>
   )

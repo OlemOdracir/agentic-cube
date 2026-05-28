@@ -17,6 +17,7 @@ import type { DiagnosticFx } from '../diagnosticFx'
 import { CampusEnvironment } from './CampusEnvironment'
 import { CityCorridorField } from './CityCorridorField'
 import { PremiumCube } from './PremiumCube'
+import { VECTOR_WORLD_SECTION_BACKGROUNDS } from './vectorWorldConfig'
 import { WaveField } from './WaveField'
 
 export type CubeSceneHandle = {
@@ -139,6 +140,7 @@ function PlatformTicks({ radius, count, faint = false }: PlatformTicksProps) {
 }
 
 export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSectionEnter, sectionOpen, sections, handleRef }: CubeSceneProps) {
+  const systemsBackground = VECTOR_WORLD_SECTION_BACKGROUNDS.systems
   const rigRef = useRef<Group>(null)
   const platformGlowTexture = useMemo(
     () => createGlowTexture('rgba(180, 170, 255, 0.85)', 'rgba(110, 96, 230, 0.32)'),
@@ -539,7 +541,13 @@ export function CubeScene({ activeSectionId, effects, onCursorModeChange, onSect
       </group>
 
       {activeSectionId === 'systems' ? (
-        <CityCorridorField controlsCamera={false} position={[0, 0.1, -13]} scale={1} skylineDepthTest fogLines={false} />
+        <CityCorridorField
+          controlsCamera={false}
+          fogLines={systemsBackground.fogLines}
+          position={[systemsBackground.position[0], systemsBackground.position[1], systemsBackground.position[2]]}
+          scale={systemsBackground.scale}
+          skylineDepthTest={systemsBackground.skylineDepthTest}
+        />
       ) : (
         <WaveField />
       )}
